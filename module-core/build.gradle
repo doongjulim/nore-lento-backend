@@ -1,0 +1,35 @@
+bootJar { enabled = false }
+jar { enabled = true }
+
+dependencies {
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jdbc'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
+
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
+    implementation group: 'org.bgee.log4jdbc-log4j2', name: 'log4jdbc-log4j2-jdbc4.1', version: '1.16'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.3.1'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'
+    runtimeOnly group: 'com.h2database', name: 'h2', version: '1.4.200'
+    implementation group: 'org.locationtech.jts', name: 'jts', version: '1.18.2'
+    implementation group: 'org.hibernate', name: 'hibernate-spatial', version: '5.6.4.Final'
+    implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '6.6'
+    implementation group: 'com.google.guava', name: 'guava', version: '30.1.1-jre'
+
+    annotationProcessor group: 'jakarta.persistence', name: 'jakarta.persistence-api'
+    annotationProcessor group: 'jakarta.annotation', name: 'jakarta.annotation-api'
+}
+def generated = "src/main/generated"
+
+sourceSets {
+    main.java.srcDirs += [generated]
+}
+
+tasks.withType(JavaCompile) {
+    options.annotationProcessorGeneratedSourcesDirectory = file(generated)
+}
+
+clean.doLast {
+    file(generated).deleteDir()
+}

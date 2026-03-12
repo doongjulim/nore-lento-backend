@@ -1,0 +1,6 @@
+rootProject.name = 'nore-lento-backend'
+include 'module-api'
+include 'module-auth'
+include 'module-common'
+include 'module-core'
+

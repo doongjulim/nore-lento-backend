@@ -1,0 +1,19 @@
+jwt:
+  token:
+    secret-key: "5070eb1d-ef71-4144-a701-2ab7fd7a881b"
+    expTime: 1800000
+    issuer: "limdongju"
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database: h2
+    show-sql: false
+  datasource:
+    url: jdbc:h2:~/atlantis;AUTO_SERVER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+upload:
+  dir: "/Users/limdongju/test/file"

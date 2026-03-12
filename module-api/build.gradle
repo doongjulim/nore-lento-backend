@@ -1,0 +1,25 @@
+plugins {
+    id "org.asciidoctor.jvm.convert" version "3.3.2"
+}
+
+group 'io.github.dongjulim'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':module-common')
+    implementation project(':module-auth')
+    implementation project(':module-core')
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security'
+    testImplementation group: 'org.springframework.security', name: 'spring-security-test', version: '5.6.1'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
+}
+
+
+test {
+    useJUnitPlatform()
+}
