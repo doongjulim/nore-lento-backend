@@ -22,7 +22,7 @@ public class FindNoticeDetailService implements FindNoticeDetailUseCase {
     public FindNoticeDetailResponse findNoticeDetail(Long id) {
         Notice notice = noticeRepository.findByIdAndDeleteCheckFalse(id)
                 .orElseThrow(NoticeNotFoundException::new);
-        long likeCount = noticeLikeRepository.countByNoticeId(id);
+        Long likeCount = noticeLikeRepository.countByNoticeId(id);
         return FindNoticeDetailResponse.from(notice, likeCount);
     }
 }

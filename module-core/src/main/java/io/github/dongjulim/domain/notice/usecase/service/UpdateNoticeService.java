@@ -20,6 +20,6 @@ public class UpdateNoticeService implements UpdateNoticeUseCase {
     public void updateNotice(Long id, UpdateNoticeRequest request) {
         Notice notice = noticeRepository.findByIdAndDeleteCheckFalse(id)
                 .orElseThrow(NoticeNotFoundException::new);
-        notice.updateNotice(request.getTitle(), request.getContent());
+        notice.updateNotice(request.getTitle(), request.getContent(), request.getCategory());
     }
 }

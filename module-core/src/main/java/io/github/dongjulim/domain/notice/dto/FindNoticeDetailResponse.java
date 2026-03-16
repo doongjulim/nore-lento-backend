@@ -1,6 +1,7 @@
 package io.github.dongjulim.domain.notice.dto;
 
 import io.github.dongjulim.domain.notice.entity.Notice;
+import io.github.dongjulim.domain.notice.enums.Category;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,22 +14,24 @@ public class FindNoticeDetailResponse {
     private final Long id;
     private final String title;
     private final String content;
-    private final long likeCount;
+    private final Category category;
+    private final Long likeCount;
     private final LocalDateTime createAt;
-    private final String createId;
+    private final String createBy;
     private final LocalDateTime updateAt;
-    private final String updateId;
+    private final String updateBy;
 
-    public static FindNoticeDetailResponse from(Notice notice, long likeCount) {
+    public static FindNoticeDetailResponse from(Notice notice, Long likeCount) {
         return FindNoticeDetailResponse.builder()
                 .id(notice.getId())
                 .title(notice.getTitle())
                 .content(notice.getContent())
+                .category(notice.getCategory())
                 .likeCount(likeCount)
                 .createAt(notice.getCreateAt())
-                .createId(notice.getCreateId())
+                .createBy(notice.getCreateBy())
                 .updateAt(notice.getUpdateAt())
-                .updateId(notice.getUpdateId())
+                .updateBy(notice.getUpdateBy())
                 .build();
     }
 }

@@ -35,11 +35,11 @@ public class NoticeLike extends BaseEntity {
             Notice notice,
             User user,
             LocalDateTime createAt,
-            String createId,
+            String createBy,
             LocalDateTime updateAt,
-            String updateId
+            String updateBy
     ) {
-        super(createAt, createId, updateAt, updateId);
+        super(createAt, createBy, updateAt, updateBy);
         this.id = id;
         this.notice = notice;
         this.user = user;

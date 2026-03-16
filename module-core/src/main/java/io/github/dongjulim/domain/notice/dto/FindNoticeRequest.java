@@ -4,19 +4,14 @@ import io.github.dongjulim.domain.notice.enums.Category;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 
 @Getter
 @NoArgsConstructor
-public class UpdateNoticeRequest {
+public class FindNoticeRequest {
 
-    @NotBlank
-    private String title;
-
-    @NotBlank
-    private String content;
-
-    @NotNull
+    @Enumerated(EnumType.STRING)
     private Category category;
+    private String keyword;
 }

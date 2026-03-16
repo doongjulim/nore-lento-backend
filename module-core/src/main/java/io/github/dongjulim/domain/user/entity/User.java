@@ -53,11 +53,11 @@ public class User extends BaseEntity {
             Grade grade,
             Boolean deleteCheck,
             LocalDateTime createAt,
-            String createId,
+            String createBy,
             LocalDateTime updateAt,
-            String updateId
+            String updateBy
     ) {
-        super(createAt, createId, updateAt, updateId);
+        super(createAt, createBy, updateAt, updateBy);
         this.id = id;
         this.username = username;
         this.password = password;

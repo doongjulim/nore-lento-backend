@@ -1,6 +1,7 @@
 package io.github.dongjulim.domain.notice.entity;
 
 import io.github.dongjulim.domain.common.entity.BaseEntity;
+import io.github.dongjulim.domain.notice.enums.Category;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,6 +27,10 @@ public class Notice extends BaseEntity {
     @Column(nullable = false, columnDefinition = "text")
     private String content;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Category category;
+
     @Column
     @ColumnDefault("false")
     private Boolean deleteCheck;
@@ -35,22 +40,25 @@ public class Notice extends BaseEntity {
             Long id,
             String title,
             String content,
+            Category category,
             Boolean deleteCheck,
             LocalDateTime createAt,
-            String createId,
+            String createBy,
             LocalDateTime updateAt,
-            String updateId
+            String updateBy
     ) {
-        super(createAt, createId, updateAt, updateId);
+        super(createAt, createBy, updateAt, updateBy);
         this.id = id;
         this.title = title;
         this.content = content;
+        this.category = category;
         this.deleteCheck = deleteCheck;
     }
 
-    public void updateNotice(String title, String content) {
+    public void updateNotice(String title, String content, Category category) {
         this.title = title;
         this.content = content;
+        this.category = category;
     }
 
     public void deleteNotice() {

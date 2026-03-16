@@ -18,9 +18,9 @@ public class FindUserDetailResponse {
     private final Role role;
     private final Grade grade;
     private final LocalDateTime createAt;
-    private final String createId;
+    private final String createBy;
     private final LocalDateTime updateAt;
-    private final String updateId;
+    private final String updateBy;
 
     public static FindUserDetailResponse from(User user) {
         return FindUserDetailResponse.builder()
@@ -30,9 +30,9 @@ public class FindUserDetailResponse {
                 .role(user.getRole())
                 .grade(user.getGrade())
                 .createAt(user.getCreateAt())
-                .createId(user.getCreateId())
+                .createBy(user.getCreateBy())
                 .updateAt(user.getUpdateAt())
-                .updateId(user.getUpdateId())
+                .updateBy(user.getUpdateBy())
                 .build();
     }
 }

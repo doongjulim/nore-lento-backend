@@ -11,5 +11,5 @@ public interface NoticeLikeRepository extends JpaRepository<NoticeLike, Long> {
 
     Optional<NoticeLike> findByNoticeIdAndUserId(Long noticeId, Long userId);
 
-    long countByNoticeId(Long noticeId);
+    Long countByNoticeId(Long noticeId);
 }

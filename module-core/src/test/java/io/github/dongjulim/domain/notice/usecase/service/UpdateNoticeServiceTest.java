@@ -3,6 +3,7 @@ package io.github.dongjulim.domain.notice.usecase.service;
 import io.github.dongjulim.domain.common.exception.NoticeNotFoundException;
 import io.github.dongjulim.domain.notice.dto.UpdateNoticeRequest;
 import io.github.dongjulim.domain.notice.entity.Notice;
+import io.github.dongjulim.domain.notice.enums.Category;
 import io.github.dongjulim.domain.notice.repository.NoticeRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,17 +32,19 @@ class UpdateNoticeServiceTest {
     @DisplayName("updateNotice - 공지사항이 존재하면 정보가 변경된다")
     void updateNotice_shouldUpdateNotice_whenNoticeExists() {
         Notice notice = Notice.builder()
-                .title("기존 제목").content("기존 내용").deleteCheck(false)
+                .title("기존 제목").content("기존 내용").category(Category.NOTICE).deleteCheck(false)
                 .build();
         UpdateNoticeRequest request = new UpdateNoticeRequest();
         ReflectionTestUtils.setField(request, "title", "새 제목");
         ReflectionTestUtils.setField(request, "content", "새 내용");
+        ReflectionTestUtils.setField(request, "category", Category.NOTICE);
         given(noticeRepository.findByIdAndDeleteCheckFalse(1L)).willReturn(Optional.of(notice));
 
         updateNoticeService.updateNotice(1L, request);
 
         assertThat(notice.getTitle()).isEqualTo("새 제목");
         assertThat(notice.getContent()).isEqualTo("새 내용");
+        assertThat(notice.getCategory()).isEqualTo(Category.NOTICE);
     }
 
     @Test

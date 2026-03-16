@@ -1,5 +1,6 @@
 package io.github.dongjulim.domain.notice.entity;
 
+import io.github.dongjulim.domain.notice.enums.Category;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +12,7 @@ class NoticeTest {
         return Notice.builder()
                 .title("제목")
                 .content("내용")
+                .category(Category.NOTICE)
                 .deleteCheck(false)
                 .build();
     }
@@ -20,10 +22,11 @@ class NoticeTest {
     void updateNotice_shouldUpdateFields() {
         Notice notice = createNotice();
 
-        notice.updateNotice("새 제목", "새 내용");
+        notice.updateNotice("새 제목", "새 내용", Category.NOTICE);
 
         assertThat(notice.getTitle()).isEqualTo("새 제목");
         assertThat(notice.getContent()).isEqualTo("새 내용");
+        assertThat(notice.getCategory()).isEqualTo(Category.NOTICE);
     }
 
     @Test

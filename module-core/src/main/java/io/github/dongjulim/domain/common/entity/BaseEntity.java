@@ -23,18 +23,18 @@ public abstract class BaseEntity {
 
     @CreatedBy
     @Column(updatable = false)
-    private String createId;
+    private String createBy;
 
     @LastModifiedDate
     private LocalDateTime updateAt;
 
     @LastModifiedBy
-    private String updateId;
+    private String updateBy;
 
-    protected BaseEntity(LocalDateTime createAt, String createId, LocalDateTime updateAt, String updateId) {
+    protected BaseEntity(LocalDateTime createAt, String createBy, LocalDateTime updateAt, String updateBy) {
         this.createAt = createAt;
-        this.createId = createId;
+        this.createBy = createBy;
         this.updateAt = updateAt;
-        this.updateId = updateId;
+        this.updateBy = updateBy;
     }
 }

@@ -20,6 +20,7 @@ public class SaveNoticeService implements SaveNoticeUseCase {
         Notice notice = Notice.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
+                .category(request.getCategory())
                 .build();
         noticeRepository.save(notice);
     }

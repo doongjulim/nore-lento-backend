@@ -2,6 +2,7 @@ package io.github.dongjulim.domain.notice.usecase.service;
 
 import io.github.dongjulim.domain.notice.dto.SaveNoticeRequest;
 import io.github.dongjulim.domain.notice.entity.Notice;
+import io.github.dongjulim.domain.notice.enums.Category;
 import io.github.dongjulim.domain.notice.repository.NoticeRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,7 @@ class SaveNoticeServiceTest {
         SaveNoticeRequest request = new SaveNoticeRequest();
         ReflectionTestUtils.setField(request, "title", "공지 제목");
         ReflectionTestUtils.setField(request, "content", "공지 내용");
+        ReflectionTestUtils.setField(request, "category", Category.NOTICE);
 
         saveNoticeService.saveNotice(request);
 
@@ -38,5 +40,6 @@ class SaveNoticeServiceTest {
         Notice saved = captor.getValue();
         assertThat(saved.getTitle()).isEqualTo("공지 제목");
         assertThat(saved.getContent()).isEqualTo("공지 내용");
+        assertThat(saved.getCategory()).isEqualTo(Category.NOTICE);
     }
 }
