@@ -59,7 +59,10 @@ public class SecurityConfig {
                 .and()
                 .addFilterBefore(jwtTokenIssueFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(
-                        jwtTokenAuthenticationFilter(List.of(AUTHENTICATION_URL), authenticationManager),
+                        jwtTokenAuthenticationFilter(List.of(
+                                AUTHENTICATION_URL,
+                                "/api/v2/notice"
+                        ), authenticationManager),
                         UsernamePasswordAuthenticationFilter.class
                 )
         ;
