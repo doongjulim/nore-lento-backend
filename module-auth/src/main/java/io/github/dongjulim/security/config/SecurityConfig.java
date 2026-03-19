@@ -61,7 +61,8 @@ public class SecurityConfig {
                 .addFilterBefore(
                         jwtTokenAuthenticationFilter(List.of(
                                 AUTHENTICATION_URL,
-                                "/api/v2/notice"
+                                "/api/v2/notice",
+                                "/api/v2/user"
                         ), authenticationManager),
                         UsernamePasswordAuthenticationFilter.class
                 )
@@ -74,7 +75,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5174")); // 프론트엔드 주소
+        config.setAllowedOrigins(List.of("http://localhost:5173")); // 프론트엔드 주소
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true); // 자격 증명 허용 (매우 중요)

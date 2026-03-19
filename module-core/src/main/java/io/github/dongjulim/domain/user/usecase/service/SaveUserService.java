@@ -2,6 +2,8 @@ package io.github.dongjulim.domain.user.usecase.service;
 
 import io.github.dongjulim.domain.user.dto.SaveUserRequest;
 import io.github.dongjulim.domain.user.entity.User;
+import io.github.dongjulim.domain.user.enums.Grade;
+import io.github.dongjulim.domain.user.enums.Role;
 import io.github.dongjulim.domain.user.repository.UserRepository;
 import io.github.dongjulim.domain.user.usecase.SaveUserUseCase;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +25,10 @@ public class SaveUserService implements SaveUserUseCase {
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .name(request.getName())
-                .role(request.getRole())
-                .grade(request.getGrade())
+                .role(Role.USER)
+                .grade(Grade.NORMAL)
                 .build();
         userRepository.save(user);
     }
+
 }

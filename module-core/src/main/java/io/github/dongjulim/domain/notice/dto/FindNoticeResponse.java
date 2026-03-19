@@ -11,12 +11,14 @@ public class FindNoticeResponse {
 
     private final Long id;
     private final String title;
+    private final String content;
     private final Category category;
 
     public static FindNoticeResponse from(Notice notice) {
         return FindNoticeResponse.builder()
                 .id(notice.getId())
                 .title(notice.getTitle())
+                .content(notice.getContent())
                 .category(notice.getCategory())
                 .build();
     }

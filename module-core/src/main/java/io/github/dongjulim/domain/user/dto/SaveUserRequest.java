@@ -22,10 +22,4 @@ public class SaveUserRequest {
 
     @NotBlank
     private String name;
-
-    @NotNull
-    private Role role;
-
-    @NotNull
-    private Grade grade;
 }
