@@ -21,6 +21,6 @@ public class SaveUserController {
     @PostMapping("/api/v2/user")
     public ResponseEntity<Void> saveUser(@RequestBody @Valid SaveUserRequest request) {
         saveUserUseCase.saveUser(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.ok().build();
     }
 }

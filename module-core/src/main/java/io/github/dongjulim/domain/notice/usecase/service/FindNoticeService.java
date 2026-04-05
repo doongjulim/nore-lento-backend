@@ -19,6 +19,10 @@ public class FindNoticeService implements FindNoticeUseCase {
 
     @Override
     public Page<FindNoticeResponse> findNotice(FindNoticeRequest request, Pageable pageable) {
+        var list = noticeRepository.findAllBySearchCondition(request.getCategory(), request.getKeyword(), pageable)
+                .map(FindNoticeResponse::from);
+        System.out.println("#### : " + request.getKeyword());
+        list.forEach( a -> System.out.println(a.getTitle()));
         return noticeRepository.findAllBySearchCondition(request.getCategory(), request.getKeyword(), pageable)
                 .map(FindNoticeResponse::from);
     }

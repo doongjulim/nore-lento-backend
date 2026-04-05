@@ -2,11 +2,11 @@ package io.github.dongjulim.domain.notice.entity;
 
 import io.github.dongjulim.domain.common.entity.BaseEntity;
 import io.github.dongjulim.domain.notice.enums.Category;
+import io.github.dongjulim.domain.user.entity.User;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -21,6 +21,13 @@ public class Notice extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "notice_seq")
     private Long id;
 
+    @Column(name= "user_id")
+    private Long userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
+
     @Column(nullable = false)
     private String title;
 
@@ -31,13 +38,13 @@ public class Notice extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Category category;
 
-    @Column
-    @ColumnDefault("false")
+    @Column(columnDefinition = "default 'false'")
     private Boolean deleteCheck;
 
     @Builder
     public Notice(
             Long id,
+            Long userId,
             String title,
             String content,
             Category category,
@@ -49,6 +56,7 @@ public class Notice extends BaseEntity {
     ) {
         super(createAt, createBy, updateAt, updateBy);
         this.id = id;
+        this.userId = userId;
         this.title = title;
         this.content = content;
         this.category = category;

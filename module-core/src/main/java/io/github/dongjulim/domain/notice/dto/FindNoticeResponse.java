@@ -5,6 +5,8 @@ import io.github.dongjulim.domain.notice.enums.Category;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class FindNoticeResponse {
@@ -13,6 +15,8 @@ public class FindNoticeResponse {
     private final String title;
     private final String content;
     private final Category category;
+    private final String name;
+    private final LocalDateTime createAt;
 
     public static FindNoticeResponse from(Notice notice) {
         return FindNoticeResponse.builder()
@@ -20,6 +24,8 @@ public class FindNoticeResponse {
                 .title(notice.getTitle())
                 .content(notice.getContent())
                 .category(notice.getCategory())
+                .name(notice.getUser().getName())
+                .createAt(notice.getCreateAt())
                 .build();
     }
 }

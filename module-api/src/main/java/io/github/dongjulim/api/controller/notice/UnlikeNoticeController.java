@@ -21,6 +21,6 @@ public class UnlikeNoticeController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         unlikeNoticeUseCase.unlikeNotice(id, userDetails.getUsername());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 }

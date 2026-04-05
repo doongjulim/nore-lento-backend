@@ -17,7 +17,7 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
 
     @Query("SELECT n FROM notice n WHERE n.deleteCheck = false" +
             " AND (:category IS NULL OR n.category = :category)" +
-            " AND (:keyword IS NULL OR n.title LIKE %:keyword%)")
+            " AND (:keyword IS NULL)")
     Page<Notice> findAllBySearchCondition(
             @Param("category") Category category,
             @Param("keyword") String keyword,

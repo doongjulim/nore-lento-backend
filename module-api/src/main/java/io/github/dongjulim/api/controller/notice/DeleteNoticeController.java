@@ -16,6 +16,6 @@ public class DeleteNoticeController {
     @DeleteMapping("/api/v2/notice/{id}")
     public ResponseEntity<Void> deleteNotice(@PathVariable Long id) {
         deleteNoticeUseCase.deleteNotice(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 }

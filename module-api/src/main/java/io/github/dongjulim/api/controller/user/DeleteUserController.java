@@ -14,6 +14,6 @@ public class DeleteUserController {
     @DeleteMapping("/api/v2/users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         deleteUserUseCase.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 }

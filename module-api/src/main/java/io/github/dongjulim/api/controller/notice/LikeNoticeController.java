@@ -22,6 +22,6 @@ public class LikeNoticeController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         likeNoticeUseCase.likeNotice(id, userDetails.getUsername());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.ok().build();
     }
 }
