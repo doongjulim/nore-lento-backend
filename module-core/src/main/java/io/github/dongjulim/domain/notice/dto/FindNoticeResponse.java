@@ -23,8 +23,7 @@ public class FindNoticeResponse {
                 .id(notice.getId())
                 .title(notice.getTitle())
                 .content(notice.getContent())
-                .category(notice.getCategory())
-                .name(notice.getUser().getName())
+                .category(notice.getCategory()).name(notice.getUser().getName())
                 .createAt(notice.getCreateAt())
                 .build();
     }
