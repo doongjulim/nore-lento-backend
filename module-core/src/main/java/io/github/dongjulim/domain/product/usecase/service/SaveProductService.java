@@ -1,7 +1,7 @@
 package io.github.dongjulim.domain.product.usecase.service;
 
 import io.github.dongjulim.domain.common.exception.UserNotFoundException;
-import io.github.dongjulim.domain.product.dto.ProductRequest;
+import io.github.dongjulim.domain.product.dto.SaveProductRequest;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
 import io.github.dongjulim.domain.product.usecase.SaveProductUseCase;
@@ -20,7 +20,7 @@ public class SaveProductService implements SaveProductUseCase {
     private final UserRepository userRepository;
 
     @Override
-    public void saveProduct(ProductRequest request, String username) {
+    public void saveProduct(SaveProductRequest request, String username) {
         User user = userRepository.findByUsernameAndDeleteCheck(username, false)
                 .orElseThrow(UserNotFoundException::new);
         Product product = Product.builder()

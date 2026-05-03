@@ -1,8 +1,8 @@
 package io.github.dongjulim.domain.product.usecase;
 
-import io.github.dongjulim.domain.product.dto.ProductRequest;
+import io.github.dongjulim.domain.product.dto.UpdateProductRequest;
 
 public interface UpdateProductUseCase {
 
-    void updateProduct(Long id, ProductRequest request);
+    void updateProduct(Long id, UpdateProductRequest request);
 }

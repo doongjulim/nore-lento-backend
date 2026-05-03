@@ -1,8 +1,8 @@
 package io.github.dongjulim.domain.product.usecase;
 
-import io.github.dongjulim.domain.product.dto.ProductRequest;
+import io.github.dongjulim.domain.product.dto.SaveProductRequest;
 
 public interface SaveProductUseCase {
 
-    void saveProduct(ProductRequest request, String username);
+    void saveProduct(SaveProductRequest request, String username);
 }
