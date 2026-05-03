@@ -65,7 +65,7 @@ public class Product extends BaseEntity {
         this.price = price;
         this.description = description;
         this.category = category;
-        this.deleteCheck = deleteCheck;
+        this.deleteCheck = deleteCheck != null ? deleteCheck : false;
     }
 
     public void updateProduct(String name, Long price, String description, ProductCategory category) {
