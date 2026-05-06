@@ -1,12 +1,8 @@
 package io.github.dongjulim.domain.common.exception;
 
-public class NoticeNotFoundException extends RuntimeException {
+public class NoticeNotFoundException extends DomainException {
 
     public NoticeNotFoundException() {
-        super("존재하지 않는 공지사항입니다.");
-    }
-
-    public NoticeNotFoundException(String message) {
-        super(message);
+        super(ErrorCode.NOTICE_NOT_FOUND, "존재하지 않는 공지사항입니다.");
     }
 }

@@ -1,7 +1,7 @@
 package io.github.dongjulim.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.dongjulim.security.handler.response.ErrorResponse;
+import io.github.dongjulim.model.ProblemDetail;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,6 +16,7 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtTokenIssueFailureHandler implements AuthenticationFailureHandler {
+
     private final ObjectMapper objectMapper;
 
     @Override
@@ -25,6 +26,14 @@ public class JwtTokenIssueFailureHandler implements AuthenticationFailureHandler
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        objectMapper.writeValue(response.getWriter(), new ErrorResponse(exception.getMessage()));
+        ProblemDetail problem = ProblemDetail.builder()
+                .type("/api/errors/authentication-failed")
+                .title("Authentication Failed")
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .detail(exception.getMessage())
+                .instance(request.getRequestURI())
+                .build();
+
+        objectMapper.writeValue(response.getWriter(), problem);
     }
 }

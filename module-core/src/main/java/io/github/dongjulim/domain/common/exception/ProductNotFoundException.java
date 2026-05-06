@@ -1,12 +1,8 @@
 package io.github.dongjulim.domain.common.exception;
 
-public class ProductNotFoundException extends RuntimeException {
+public class ProductNotFoundException extends DomainException {
 
     public ProductNotFoundException() {
-        super("존재하지 않는 상품입니다.");
-    }
-
-    public ProductNotFoundException(String message) {
-        super(message);
+        super(ErrorCode.PRODUCT_NOT_FOUND, "존재하지 않는 상품입니다.");
     }
 }
