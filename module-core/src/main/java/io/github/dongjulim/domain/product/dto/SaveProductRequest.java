@@ -1,6 +1,5 @@
 package io.github.dongjulim.domain.product.dto;
 
-import io.github.dongjulim.domain.product.enums.ProductCategory;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -19,6 +18,6 @@ public class SaveProductRequest {
 
     private String description;
 
-    @NotNull
-    private ProductCategory category;
+    @NotNull(message = "카테고리 ID는 필수입니다.")
+    private Long categoryId;
 }

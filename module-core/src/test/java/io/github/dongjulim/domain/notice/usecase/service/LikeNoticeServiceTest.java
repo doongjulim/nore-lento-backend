@@ -7,10 +7,10 @@ import io.github.dongjulim.domain.notice.entity.Notice;
 import io.github.dongjulim.domain.notice.entity.NoticeLike;
 import io.github.dongjulim.domain.notice.repository.NoticeLikeRepository;
 import io.github.dongjulim.domain.notice.repository.NoticeRepository;
+import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
 import io.github.dongjulim.domain.user.enums.Grade;
 import io.github.dongjulim.domain.user.enums.Role;
-import io.github.dongjulim.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +33,7 @@ class LikeNoticeServiceTest {
     private NoticeRepository noticeRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private UserLoader userLoader;
 
     @Mock
     private NoticeLikeRepository noticeLikeRepository;
@@ -58,7 +58,7 @@ class LikeNoticeServiceTest {
         Notice notice = createNotice();
         User user = createUser();
         given(noticeRepository.findByIdAndDeleteCheckFalse(1L)).willReturn(Optional.of(notice));
-        given(userRepository.findByUsernameAndDeleteCheck("testuser", false)).willReturn(Optional.of(user));
+        given(userLoader.load("testuser")).willReturn(user);
         given(noticeLikeRepository.existsByNoticeIdAndUserId(1L, user.getId())).willReturn(false);
 
         likeNoticeService.likeNotice(1L, "testuser");
@@ -75,7 +75,7 @@ class LikeNoticeServiceTest {
         Notice notice = createNotice();
         User user = createUser();
         given(noticeRepository.findByIdAndDeleteCheckFalse(1L)).willReturn(Optional.of(notice));
-        given(userRepository.findByUsernameAndDeleteCheck("testuser", false)).willReturn(Optional.of(user));
+        given(userLoader.load("testuser")).willReturn(user);
         given(noticeLikeRepository.existsByNoticeIdAndUserId(1L, user.getId())).willReturn(true);
 
         assertThatThrownBy(() -> likeNoticeService.likeNotice(1L, "testuser"))
@@ -95,7 +95,7 @@ class LikeNoticeServiceTest {
     @DisplayName("likeNotice - 유저가 없으면 UserNotFoundException을 던진다")
     void likeNotice_throwsUserNotFoundException_whenUserNotFound() {
         given(noticeRepository.findByIdAndDeleteCheckFalse(1L)).willReturn(Optional.of(createNotice()));
-        given(userRepository.findByUsernameAndDeleteCheck("testuser", false)).willReturn(Optional.empty());
+        given(userLoader.load("testuser")).willThrow(new UserNotFoundException());
 
         assertThatThrownBy(() -> likeNoticeService.likeNotice(1L, "testuser"))
                 .isInstanceOf(UserNotFoundException.class);

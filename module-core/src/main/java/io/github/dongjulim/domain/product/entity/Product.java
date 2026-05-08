@@ -1,7 +1,7 @@
 package io.github.dongjulim.domain.product.entity;
 
 import io.github.dongjulim.domain.common.entity.BaseEntity;
-import io.github.dongjulim.domain.product.enums.ProductCategory;
+import io.github.dongjulim.domain.productCategory.entity.ProductCategory;
 import io.github.dongjulim.domain.user.entity.User;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,8 +37,11 @@ public class Product extends BaseEntity {
     @Column(columnDefinition = "text")
     private String description;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Column(name = "category_id", nullable = false)
+    private Long categoryId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", insertable = false, updatable = false)
     private ProductCategory category;
 
     @Column(columnDefinition = "default 'false'")
@@ -51,7 +54,7 @@ public class Product extends BaseEntity {
             String name,
             Long price,
             String description,
-            ProductCategory category,
+            Long categoryId,
             Boolean deleteCheck,
             LocalDateTime createAt,
             String createBy,
@@ -64,15 +67,15 @@ public class Product extends BaseEntity {
         this.name = name;
         this.price = price;
         this.description = description;
-        this.category = category;
+        this.categoryId = categoryId;
         this.deleteCheck = deleteCheck != null ? deleteCheck : false;
     }
 
-    public void updateProduct(String name, Long price, String description, ProductCategory category) {
+    public void updateProduct(String name, Long price, String description, Long categoryId) {
         this.name = name;
         this.price = price;
         this.description = description;
-        this.category = category;
+        this.categoryId = categoryId;
     }
 
     public void deleteProduct() {

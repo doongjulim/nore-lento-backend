@@ -5,10 +5,10 @@ import io.github.dongjulim.domain.common.exception.UserNotFoundException;
 import io.github.dongjulim.domain.notice.entity.Notice;
 import io.github.dongjulim.domain.notice.entity.NoticeLike;
 import io.github.dongjulim.domain.notice.repository.NoticeLikeRepository;
+import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
 import io.github.dongjulim.domain.user.enums.Grade;
 import io.github.dongjulim.domain.user.enums.Role;
-import io.github.dongjulim.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +26,7 @@ import static org.mockito.BDDMockito.then;
 class UnlikeNoticeServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserLoader userLoader;
 
     @Mock
     private NoticeLikeRepository noticeLikeRepository;
@@ -47,7 +47,7 @@ class UnlikeNoticeServiceTest {
         User user = createUser();
         Notice notice = Notice.builder().title("제목").content("내용").deleteCheck(false).build();
         NoticeLike noticeLike = NoticeLike.builder().notice(notice).user(user).build();
-        given(userRepository.findByUsernameAndDeleteCheck("testuser", false)).willReturn(Optional.of(user));
+        given(userLoader.load("testuser")).willReturn(user);
         given(noticeLikeRepository.findByNoticeIdAndUserId(1L, user.getId())).willReturn(Optional.of(noticeLike));
 
         unlikeNoticeService.unlikeNotice(1L, "testuser");
@@ -59,7 +59,7 @@ class UnlikeNoticeServiceTest {
     @DisplayName("unlikeNotice - 좋아요가 없으면 NoticeLikeNotFoundException을 던진다")
     void unlikeNotice_throwsNoticeLikeNotFoundException_whenNotFound() {
         User user = createUser();
-        given(userRepository.findByUsernameAndDeleteCheck("testuser", false)).willReturn(Optional.of(user));
+        given(userLoader.load("testuser")).willReturn(user);
         given(noticeLikeRepository.findByNoticeIdAndUserId(1L, user.getId())).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> unlikeNoticeService.unlikeNotice(1L, "testuser"))
@@ -69,7 +69,7 @@ class UnlikeNoticeServiceTest {
     @Test
     @DisplayName("unlikeNotice - 유저가 없으면 UserNotFoundException을 던진다")
     void unlikeNotice_throwsUserNotFoundException_whenUserNotFound() {
-        given(userRepository.findByUsernameAndDeleteCheck("testuser", false)).willReturn(Optional.empty());
+        given(userLoader.load("testuser")).willThrow(new UserNotFoundException());
 
         assertThatThrownBy(() -> unlikeNoticeService.unlikeNotice(1L, "testuser"))
                 .isInstanceOf(UserNotFoundException.class);

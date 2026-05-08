@@ -1,7 +1,7 @@
 package io.github.dongjulim.domain.product.dto;
 
 import io.github.dongjulim.domain.product.entity.Product;
-import io.github.dongjulim.domain.product.enums.ProductCategory;
+import io.github.dongjulim.domain.productCategory.dto.FindProductCategoryResponse;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,7 +15,7 @@ public class FindProductDetailResponse {
     private final String name;
     private final Long price;
     private final String description;
-    private final ProductCategory category;
+    private final FindProductCategoryResponse category;
     private final LocalDateTime createAt;
     private final String createBy;
     private final LocalDateTime updateAt;
@@ -27,7 +27,7 @@ public class FindProductDetailResponse {
                 .name(product.getName())
                 .price(product.getPrice())
                 .description(product.getDescription())
-                .category(product.getCategory())
+                .category(FindProductCategoryResponse.from(product.getCategory()))
                 .createAt(product.getCreateAt())
                 .createBy(product.getCreateBy())
                 .updateAt(product.getUpdateAt())

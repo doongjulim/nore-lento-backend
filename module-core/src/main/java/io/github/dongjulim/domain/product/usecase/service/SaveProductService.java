@@ -1,7 +1,10 @@
 package io.github.dongjulim.domain.product.usecase.service;
 
+import io.github.dongjulim.domain.common.exception.ProductCategoryNotFoundException;
 import io.github.dongjulim.domain.product.dto.SaveProductRequest;
 import io.github.dongjulim.domain.product.entity.Product;
+import io.github.dongjulim.domain.productCategory.entity.ProductCategory;
+import io.github.dongjulim.domain.productCategory.repository.ProductCategoryRepository;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
 import io.github.dongjulim.domain.product.usecase.SaveProductUseCase;
 import io.github.dongjulim.domain.user.component.UserLoader;
@@ -16,17 +19,20 @@ import org.springframework.transaction.annotation.Transactional;
 public class SaveProductService implements SaveProductUseCase {
 
     private final ProductRepository productRepository;
+    private final ProductCategoryRepository productCategoryRepository;
     private final UserLoader userLoader;
 
     @Override
     public void saveProduct(SaveProductRequest request, String username) {
         User user = userLoader.load(username);
+        ProductCategory category = productCategoryRepository.findByIdAndDeleteCheckFalse(request.getCategoryId())
+                .orElseThrow(ProductCategoryNotFoundException::new);
         Product product = Product.builder()
                 .userId(user.getId())
                 .name(request.getName())
                 .price(request.getPrice())
                 .description(request.getDescription())
-                .category(request.getCategory())
+                .categoryId(category.getId())
                 .build();
         productRepository.save(product);
     }

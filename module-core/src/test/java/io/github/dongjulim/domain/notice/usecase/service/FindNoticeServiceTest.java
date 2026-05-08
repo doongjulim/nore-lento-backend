@@ -5,6 +5,7 @@ import io.github.dongjulim.domain.notice.dto.FindNoticeResponse;
 import io.github.dongjulim.domain.notice.entity.Notice;
 import io.github.dongjulim.domain.notice.enums.Category;
 import io.github.dongjulim.domain.notice.repository.NoticeRepository;
+import io.github.dongjulim.domain.user.entity.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,11 +32,18 @@ class FindNoticeServiceTest {
     @InjectMocks
     private FindNoticeService findNoticeService;
 
+    private Notice createNotice(String title, String content, Category category) {
+        User user = User.builder().id(1L).name("작성자").build();
+        Notice notice = Notice.builder().title(title).content(content).category(category).deleteCheck(false).build();
+        ReflectionTestUtils.setField(notice, "user", user);
+        return notice;
+    }
+
     @Test
     @DisplayName("findNotice - 검색 조건에 맞는 공지사항 목록을 페이징하여 반환한다")
     void findNotice_returnsPagedNotices() {
-        Notice notice1 = Notice.builder().title("제목1").content("내용1").category(Category.NOTICE).deleteCheck(false).build();
-        Notice notice2 = Notice.builder().title("제목2").content("내용2").category(Category.NOTICE).deleteCheck(false).build();
+        Notice notice1 = createNotice("제목1", "내용1", Category.NOTICE);
+        Notice notice2 = createNotice("제목2", "내용2", Category.NOTICE);
         Pageable pageable = PageRequest.of(0, 10);
         Page<Notice> noticePage = new PageImpl<>(List.of(notice1, notice2), pageable, 2);
 
@@ -52,7 +60,7 @@ class FindNoticeServiceTest {
     @Test
     @DisplayName("findNotice - category 필터로 검색하면 해당 카테고리만 반환한다")
     void findNotice_filtersByCategory() {
-        Notice notice = Notice.builder().title("공지").content("내용").category(Category.QA).deleteCheck(false).build();
+        Notice notice = createNotice("공지", "내용", Category.QA);
         Pageable pageable = PageRequest.of(0, 10);
         Page<Notice> noticePage = new PageImpl<>(List.of(notice), pageable, 1);
 
@@ -69,7 +77,7 @@ class FindNoticeServiceTest {
     @Test
     @DisplayName("findNotice - keyword 필터로 검색하면 제목에 포함된 공지만 반환한다")
     void findNotice_filtersByKeyword() {
-        Notice notice = Notice.builder().title("긴급 공지").content("내용").category(Category.NOTICE).deleteCheck(false).build();
+        Notice notice = createNotice("긴급 공지", "내용", Category.NOTICE);
         Pageable pageable = PageRequest.of(0, 10);
         Page<Notice> noticePage = new PageImpl<>(List.of(notice), pageable, 1);
 

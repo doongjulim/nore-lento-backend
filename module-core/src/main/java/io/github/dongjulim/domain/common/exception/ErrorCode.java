@@ -9,6 +9,7 @@ public enum ErrorCode {
 
     USER_NOT_FOUND("user-not-found", "User Not Found"),
     PRODUCT_NOT_FOUND("product-not-found", "Product Not Found"),
+    PRODUCT_CATEGORY_NOT_FOUND("product-category-not-found", "Product Category Not Found"),
     NOTICE_NOT_FOUND("notice-not-found", "Notice Not Found"),
     CART_NOT_FOUND("cart-not-found", "Cart Not Found"),
     CART_ITEM_NOT_FOUND("cart-item-not-found", "Cart Item Not Found"),

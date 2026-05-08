@@ -26,9 +26,10 @@ public class CommonExceptionHandler {
             ErrorCode.PRODUCT_NOT_FOUND,      HttpStatus.NOT_FOUND,
             ErrorCode.NOTICE_NOT_FOUND,       HttpStatus.NOT_FOUND,
             ErrorCode.CART_NOT_FOUND,         HttpStatus.NOT_FOUND,
-            ErrorCode.CART_ITEM_NOT_FOUND,    HttpStatus.NOT_FOUND,
-            ErrorCode.NOTICE_LIKE_NOT_FOUND,  HttpStatus.NOT_FOUND,
-            ErrorCode.ALREADY_LIKED,          HttpStatus.CONFLICT
+            ErrorCode.CART_ITEM_NOT_FOUND,             HttpStatus.NOT_FOUND,
+            ErrorCode.NOTICE_LIKE_NOT_FOUND,           HttpStatus.NOT_FOUND,
+            ErrorCode.ALREADY_LIKED,                   HttpStatus.CONFLICT,
+            ErrorCode.PRODUCT_CATEGORY_NOT_FOUND,      HttpStatus.NOT_FOUND
     );
 
     @ExceptionHandler(DomainException.class)

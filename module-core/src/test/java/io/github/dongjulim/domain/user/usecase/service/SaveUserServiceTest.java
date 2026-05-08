@@ -5,6 +5,7 @@ import io.github.dongjulim.domain.user.entity.User;
 import io.github.dongjulim.domain.user.enums.Grade;
 import io.github.dongjulim.domain.user.enums.Role;
 import io.github.dongjulim.domain.user.repository.UserRepository;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,8 +39,6 @@ class SaveUserServiceTest {
         ReflectionTestUtils.setField(request, "username", "testuser");
         ReflectionTestUtils.setField(request, "password", "rawPassword");
         ReflectionTestUtils.setField(request, "name", "Test User");
-        ReflectionTestUtils.setField(request, "role", Role.USER);
-        ReflectionTestUtils.setField(request, "grade", Grade.NORMAL);
         given(passwordEncoder.encode("rawPassword")).willReturn("encodedPassword");
 
         saveUserService.saveUser(request);

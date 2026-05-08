@@ -4,10 +4,10 @@ import io.github.dongjulim.domain.notice.dto.SaveNoticeRequest;
 import io.github.dongjulim.domain.notice.entity.Notice;
 import io.github.dongjulim.domain.notice.enums.Category;
 import io.github.dongjulim.domain.notice.repository.NoticeRepository;
+import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
 import io.github.dongjulim.domain.user.enums.Grade;
 import io.github.dongjulim.domain.user.enums.Role;
-import io.github.dongjulim.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,8 +16,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -30,15 +28,13 @@ class SaveNoticeServiceTest {
     private NoticeRepository noticeRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private UserLoader userLoader;
 
     @InjectMocks
     private SaveNoticeService saveNoticeService;
 
-    @Test
-    @DisplayName("saveNotice - 공지사항을 저장한다")
-    void saveNotice_shouldSaveNotice() {
-        User user = User.builder()
+    private User createUser() {
+        return User.builder()
                 .id(1L)
                 .username("testuser")
                 .password("password")
@@ -47,8 +43,13 @@ class SaveNoticeServiceTest {
                 .grade(Grade.NORMAL)
                 .deleteCheck(false)
                 .build();
-        given(userRepository.findByUsernameAndDeleteCheck("testuser", false))
-                .willReturn(Optional.of(user));
+    }
+
+    @Test
+    @DisplayName("saveNotice - 공지사항을 저장한다")
+    void saveNotice_shouldSaveNotice() {
+        User user = createUser();
+        given(userLoader.load("testuser")).willReturn(user);
 
         SaveNoticeRequest request = new SaveNoticeRequest();
         ReflectionTestUtils.setField(request, "title", "공지 제목");
@@ -60,7 +61,7 @@ class SaveNoticeServiceTest {
         ArgumentCaptor<Notice> captor = ArgumentCaptor.forClass(Notice.class);
         then(noticeRepository).should().save(captor.capture());
         Notice saved = captor.getValue();
-        assertThat(saved.getUser()).isEqualTo(user);
+        assertThat(saved.getUserId()).isEqualTo(1L);
         assertThat(saved.getTitle()).isEqualTo("공지 제목");
         assertThat(saved.getContent()).isEqualTo("공지 내용");
         assertThat(saved.getCategory()).isEqualTo(Category.NOTICE);
