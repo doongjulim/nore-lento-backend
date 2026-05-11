@@ -1,0 +1,25 @@
+package io.github.dongjulim.domain.review.dto;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+@Getter
+@NoArgsConstructor
+public class SaveReviewRequest {
+
+    @NotNull(message = "상품 ID는 필수입니다.")
+    private Long productId;
+
+    @NotBlank(message = "리뷰 내용은 필수입니다.")
+    private String content;
+
+    @NotNull(message = "평점은 필수입니다.")
+    @Min(value = 1, message = "평점은 1 이상이어야 합니다.")
+    @Max(value = 5, message = "평점은 5 이하이어야 합니다.")
+    private Integer rating;
+}
