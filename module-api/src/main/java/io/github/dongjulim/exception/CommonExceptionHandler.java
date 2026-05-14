@@ -21,16 +21,17 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class CommonExceptionHandler {
 
-    private static final Map<ErrorCode, HttpStatus> STATUS_MAP = Map.of(
-            ErrorCode.USER_NOT_FOUND,                  HttpStatus.NOT_FOUND,
-            ErrorCode.PRODUCT_NOT_FOUND,               HttpStatus.NOT_FOUND,
-            ErrorCode.NOTICE_NOT_FOUND,                HttpStatus.NOT_FOUND,
-            ErrorCode.CART_NOT_FOUND,                  HttpStatus.NOT_FOUND,
-            ErrorCode.CART_ITEM_NOT_FOUND,             HttpStatus.NOT_FOUND,
-            ErrorCode.NOTICE_LIKE_NOT_FOUND,           HttpStatus.NOT_FOUND,
-            ErrorCode.ALREADY_LIKED,                   HttpStatus.CONFLICT,
-            ErrorCode.PRODUCT_CATEGORY_NOT_FOUND,      HttpStatus.NOT_FOUND,
-            ErrorCode.REVIEW_NOT_FOUND,                HttpStatus.NOT_FOUND
+    private static final Map<ErrorCode, HttpStatus> STATUS_MAP = Map.ofEntries(
+            Map.entry(ErrorCode.USER_NOT_FOUND,                  HttpStatus.NOT_FOUND),
+            Map.entry(ErrorCode.PRODUCT_NOT_FOUND,               HttpStatus.NOT_FOUND),
+            Map.entry(ErrorCode.NOTICE_NOT_FOUND,                HttpStatus.NOT_FOUND),
+            Map.entry(ErrorCode.CART_NOT_FOUND,                  HttpStatus.NOT_FOUND),
+            Map.entry(ErrorCode.CART_ITEM_NOT_FOUND,             HttpStatus.NOT_FOUND),
+            Map.entry(ErrorCode.NOTICE_LIKE_NOT_FOUND,           HttpStatus.NOT_FOUND),
+            Map.entry(ErrorCode.ALREADY_LIKED,                   HttpStatus.CONFLICT),
+            Map.entry(ErrorCode.PRODUCT_CATEGORY_NOT_FOUND,      HttpStatus.NOT_FOUND),
+            Map.entry(ErrorCode.REVIEW_NOT_FOUND,                HttpStatus.NOT_FOUND),
+            Map.entry(ErrorCode.NOTIFICATION_NOT_FOUND,          HttpStatus.NOT_FOUND)
     );
 
     @ExceptionHandler(DomainException.class)

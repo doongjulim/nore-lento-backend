@@ -15,7 +15,8 @@ public enum ErrorCode {
     CART_ITEM_NOT_FOUND("cart-item-not-found", "Cart Item Not Found"),
     ALREADY_LIKED("already-liked", "Already Liked"),
     NOTICE_LIKE_NOT_FOUND("notice-like-not-found", "Notice Like Not Found"),
-    REVIEW_NOT_FOUND("review-not-found", "Review Not Found");
+    REVIEW_NOT_FOUND("review-not-found", "Review Not Found"),
+    NOTIFICATION_NOT_FOUND("notification-not-found", "Notification Not Found");
 
     private final String code;
     private final String title;
