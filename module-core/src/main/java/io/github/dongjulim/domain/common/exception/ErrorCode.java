@@ -16,7 +16,10 @@ public enum ErrorCode {
     ALREADY_LIKED("already-liked", "Already Liked"),
     NOTICE_LIKE_NOT_FOUND("notice-like-not-found", "Notice Like Not Found"),
     REVIEW_NOT_FOUND("review-not-found", "Review Not Found"),
-    NOTIFICATION_NOT_FOUND("notification-not-found", "Notification Not Found");
+    NOTIFICATION_NOT_FOUND("notification-not-found", "Notification Not Found"),
+    ORDER_NOT_FOUND("order-not-found", "Order Not Found"),
+    ORDER_NOT_CANCELLABLE("order-not-cancellable", "Order Not Cancellable"),
+    CART_EMPTY("cart-empty", "Cart Is Empty");
 
     private final String code;
     private final String title;
