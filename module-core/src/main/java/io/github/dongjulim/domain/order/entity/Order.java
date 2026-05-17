@@ -2,6 +2,7 @@ package io.github.dongjulim.domain.order.entity;
 
 import io.github.dongjulim.domain.common.entity.BaseEntity;
 import io.github.dongjulim.domain.common.exception.OrderNotCancellableException;
+import io.github.dongjulim.domain.common.exception.OrderNotPayableException;
 import io.github.dongjulim.domain.order.enums.OrderStatus;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -61,6 +62,20 @@ public class Order extends BaseEntity {
 
     public void cancel() {
         if (this.status != OrderStatus.PENDING) {
+            throw new OrderNotCancellableException();
+        }
+        this.status = OrderStatus.CANCELLED;
+    }
+
+    public void complete() {
+        if (this.status != OrderStatus.PENDING) {
+            throw new OrderNotPayableException();
+        }
+        this.status = OrderStatus.COMPLETED;
+    }
+
+    public void cancelByRefund() {
+        if (this.status != OrderStatus.COMPLETED) {
             throw new OrderNotCancellableException();
         }
         this.status = OrderStatus.CANCELLED;

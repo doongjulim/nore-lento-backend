@@ -1,6 +1,7 @@
 package io.github.dongjulim.domain.order.entity;
 
 import io.github.dongjulim.domain.common.exception.OrderNotCancellableException;
+import io.github.dongjulim.domain.common.exception.OrderNotPayableException;
 import io.github.dongjulim.domain.order.enums.OrderStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,6 +51,64 @@ class OrderTest {
                 .build();
 
         assertThatThrownBy(order::cancel)
+                .isInstanceOf(OrderNotCancellableException.class);
+    }
+
+    @Test
+    @DisplayName("complete - PENDING 상태의 주문이 COMPLETED로 변경된다")
+    void complete_shouldChangePendingToCompleted() {
+        Order order = Order.builder()
+                .id(1L)
+                .userId(1L)
+                .status(OrderStatus.PENDING)
+                .totalPrice(10000L)
+                .build();
+
+        order.complete();
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.COMPLETED);
+    }
+
+    @Test
+    @DisplayName("complete - PENDING이 아닌 상태이면 OrderNotPayableException을 던진다")
+    void complete_throwsOrderNotPayableException_whenNotPending() {
+        Order order = Order.builder()
+                .id(1L)
+                .userId(1L)
+                .status(OrderStatus.COMPLETED)
+                .totalPrice(10000L)
+                .build();
+
+        assertThatThrownBy(order::complete)
+                .isInstanceOf(OrderNotPayableException.class);
+    }
+
+    @Test
+    @DisplayName("cancelByRefund - COMPLETED 상태의 주문이 CANCELLED로 변경된다")
+    void cancelByRefund_shouldChangeCompletedToCancelled() {
+        Order order = Order.builder()
+                .id(1L)
+                .userId(1L)
+                .status(OrderStatus.COMPLETED)
+                .totalPrice(10000L)
+                .build();
+
+        order.cancelByRefund();
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+    }
+
+    @Test
+    @DisplayName("cancelByRefund - COMPLETED가 아닌 상태이면 OrderNotCancellableException을 던진다")
+    void cancelByRefund_throwsOrderNotCancellableException_whenNotCompleted() {
+        Order order = Order.builder()
+                .id(1L)
+                .userId(1L)
+                .status(OrderStatus.PENDING)
+                .totalPrice(10000L)
+                .build();
+
+        assertThatThrownBy(order::cancelByRefund)
                 .isInstanceOf(OrderNotCancellableException.class);
     }
 }

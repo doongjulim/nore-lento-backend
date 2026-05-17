@@ -19,7 +19,10 @@ public enum ErrorCode {
     NOTIFICATION_NOT_FOUND("notification-not-found", "Notification Not Found"),
     ORDER_NOT_FOUND("order-not-found", "Order Not Found"),
     ORDER_NOT_CANCELLABLE("order-not-cancellable", "Order Not Cancellable"),
-    CART_EMPTY("cart-empty", "Cart Is Empty");
+    CART_EMPTY("cart-empty", "Cart Is Empty"),
+    PAYMENT_NOT_FOUND("payment-not-found", "Payment Not Found"),
+    PAYMENT_NOT_REFUNDABLE("payment-not-refundable", "Payment Not Refundable"),
+    ORDER_NOT_PAYABLE("order-not-payable", "Order Not Payable");
 
     private final String code;
     private final String title;
