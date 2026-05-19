@@ -18,6 +18,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -60,9 +62,10 @@ public class SecurityConfig {
                 .addFilterBefore(jwtTokenIssueFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(
                         jwtTokenAuthenticationFilter(List.of(
-                                AUTHENTICATION_URL,
-                                "/api/v2/notice",
-                                "/api/v2/user"
+                                new AntPathRequestMatcher(AUTHENTICATION_URL),
+                                new AntPathRequestMatcher("/api/v2/notice", "GET"),
+                                new AntPathRequestMatcher("/api/v2/notice/*", "GET"),
+                                new AntPathRequestMatcher("/api/v2/user", "POST")
                         ), authenticationManager),
                         UsernamePasswordAuthenticationFilter.class
                 )
@@ -76,7 +79,7 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:5173")); // 프론트엔드 주소
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true); // 자격 증명 허용 (매우 중요)
         config.setMaxAge(3600L);
@@ -91,7 +94,7 @@ public class SecurityConfig {
         return filter;
     }
 
-    private JwtTokenAuthenticationFilter jwtTokenAuthenticationFilter(List<String> pathsToSkip,
+    private JwtTokenAuthenticationFilter jwtTokenAuthenticationFilter(List<RequestMatcher> pathsToSkip,
                                                                       AuthenticationManager authenticationManager) {
         var matcher = new SkipPathRequestMatcher(pathsToSkip, API_ROOT_URL);
 

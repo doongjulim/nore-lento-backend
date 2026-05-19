@@ -7,17 +7,15 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-import static java.util.stream.Collectors.toList;
-
 public class SkipPathRequestMatcher implements RequestMatcher {
     private final OrRequestMatcher matchers;
     private final RequestMatcher processingMatcher;
 
-    public SkipPathRequestMatcher(List<String> pathsToSkip, String processingPath) {
+    public SkipPathRequestMatcher(List<RequestMatcher> pathsToSkip, String processingPath) {
         if (pathsToSkip == null) {
             throw new IllegalArgumentException("pathsToSkip cannot be null");
         }
-        this.matchers = new OrRequestMatcher(pathsToSkip.stream().map(AntPathRequestMatcher::new).collect(toList()));
+        this.matchers = new OrRequestMatcher(pathsToSkip);
         this.processingMatcher = new AntPathRequestMatcher(processingPath);
     }
 
