@@ -17,7 +17,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import io.github.dongjulim.domain.common.exception.UserNotFoundException;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -65,5 +68,19 @@ class SaveNoticeServiceTest {
         assertThat(saved.getTitle()).isEqualTo("공지 제목");
         assertThat(saved.getContent()).isEqualTo("공지 내용");
         assertThat(saved.getCategory()).isEqualTo(Category.NOTICE);
+    }
+
+    @Test
+    @DisplayName("saveNotice - 유저가 없으면 UserNotFoundException을 던진다")
+    void saveNotice_throwsUserNotFoundException_whenUserNotFound() {
+        given(userLoader.load("testuser")).willThrow(new UserNotFoundException());
+
+        SaveNoticeRequest request = new SaveNoticeRequest();
+        ReflectionTestUtils.setField(request, "title", "공지 제목");
+        ReflectionTestUtils.setField(request, "content", "공지 내용");
+        ReflectionTestUtils.setField(request, "category", Category.NOTICE);
+
+        assertThatThrownBy(() -> saveNoticeService.saveNotice(request, "testuser"))
+                .isInstanceOf(UserNotFoundException.class);
     }
 }
