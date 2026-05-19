@@ -2,6 +2,7 @@ package io.github.dongjulim.security.filter;
 
 import io.github.dongjulim.security.JwtAuthenticationToken;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -23,6 +24,15 @@ public class JwtTokenAuthenticationFilter extends AbstractAuthenticationProcessi
     public JwtTokenAuthenticationFilter(RequestMatcher matcher, AuthenticationFailureHandler failureHandler) {
         super(matcher);
         this.setAuthenticationFailureHandler(failureHandler);
+    }
+
+    @Override
+    protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response) {
+        Authentication existing = SecurityContextHolder.getContext().getAuthentication();
+        if (existing != null && existing.isAuthenticated() && !(existing instanceof AnonymousAuthenticationToken)) {
+            return false;
+        }
+        return super.requiresAuthentication(request, response);
     }
 
     @Override

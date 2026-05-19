@@ -9,6 +9,7 @@ import io.github.dongjulim.security.provider.JwtAuthenticationProvider;
 import io.github.dongjulim.security.provider.JwtTokenIssueProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -52,7 +53,16 @@ public class SecurityConfig {
             throws Exception {
         http.authorizeRequests().and().csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/").hasAnyRole(Role.ADMIN.name(),Role.MASTER.name())
+                .antMatchers(HttpMethod.POST,   "/api/v2/deliveries").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
+                .antMatchers(HttpMethod.PATCH,  "/api/v2/deliveries/*/status").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
+                .antMatchers(HttpMethod.DELETE, "/api/v2/deliveries/*/return").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
+                .antMatchers(HttpMethod.POST,   "/api/v2/notice").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
+                .antMatchers(HttpMethod.PUT,    "/api/v2/notice/*").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
+                .antMatchers(HttpMethod.DELETE, "/api/v2/notice/*").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
+                .antMatchers(HttpMethod.POST,   "/api/v2/notifications").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
+                .antMatchers(HttpMethod.POST,   "/api/v2/product/categories").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
+                .antMatchers(HttpMethod.PUT,    "/api/v2/product/categories/*").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
+                .antMatchers(HttpMethod.DELETE, "/api/v2/product/categories/*").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
                 .and()
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .exceptionHandling()

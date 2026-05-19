@@ -4,6 +4,7 @@ import io.github.dongjulim.domain.notice.dto.SaveNoticeRequest;
 import io.github.dongjulim.domain.notice.usecase.SaveNoticeUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,7 @@ public class SaveNoticeController {
 
     private final SaveNoticeUseCase saveNoticeUseCase;
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MASTER')")
     @PostMapping("/api/v2/notice")
     public ResponseEntity<Void> saveNotice(
             @RequestBody @Valid SaveNoticeRequest request,

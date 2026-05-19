@@ -4,6 +4,7 @@ import io.github.dongjulim.domain.notice.dto.UpdateNoticeRequest;
 import io.github.dongjulim.domain.notice.usecase.UpdateNoticeUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -14,6 +15,7 @@ public class UpdateNoticeController {
 
     private final UpdateNoticeUseCase updateNoticeUseCase;
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MASTER')")
     @PutMapping("/api/v2/notice/{id}")
     public ResponseEntity<Void> updateNotice(
             @PathVariable Long id,

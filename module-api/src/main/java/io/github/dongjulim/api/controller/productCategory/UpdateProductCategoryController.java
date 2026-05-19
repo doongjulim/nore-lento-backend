@@ -4,6 +4,7 @@ import io.github.dongjulim.domain.productCategory.dto.UpdateProductCategoryReque
 import io.github.dongjulim.domain.productCategory.usecase.UpdateProductCategoryUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +18,7 @@ public class UpdateProductCategoryController {
 
     private final UpdateProductCategoryUseCase updateProductCategoryUseCase;
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MASTER')")
     @PutMapping("/api/v2/product/categories/{id}")
     public ResponseEntity<Void> updateProductCategory(
             @PathVariable Long id,

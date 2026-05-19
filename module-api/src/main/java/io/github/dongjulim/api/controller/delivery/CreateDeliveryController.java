@@ -4,6 +4,7 @@ import io.github.dongjulim.domain.delivery.dto.CreateDeliveryRequest;
 import io.github.dongjulim.domain.delivery.usecase.CreateDeliveryUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,6 +17,7 @@ public class CreateDeliveryController {
 
     private final CreateDeliveryUseCase createDeliveryUseCase;
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MASTER')")
     @PostMapping("/api/v2/deliveries")
     public ResponseEntity<Void> createDelivery(
             @RequestBody @Valid CreateDeliveryRequest request
