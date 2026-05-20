@@ -3,12 +3,16 @@ package io.github.dongjulim.domain.payment.usecase.service;
 import io.github.dongjulim.domain.common.exception.PaymentNotFoundException;
 import io.github.dongjulim.domain.common.exception.PaymentNotRefundableException;
 import io.github.dongjulim.domain.order.entity.Order;
+import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.enums.OrderStatus;
+import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.payment.entity.Payment;
 import io.github.dongjulim.domain.payment.enums.PaymentMethod;
 import io.github.dongjulim.domain.payment.enums.PaymentStatus;
 import io.github.dongjulim.domain.payment.repository.PaymentRepository;
+import io.github.dongjulim.domain.stock.entity.Stock;
+import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +38,12 @@ class RefundPaymentServiceTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private OrderItemRepository orderItemRepository;
+
+    @Mock
+    private StockRepository stockRepository;
 
     @Mock
     private UserLoader userLoader;
@@ -56,11 +67,31 @@ class RefundPaymentServiceTest {
         given(userLoader.load("testuser")).willReturn(user);
         given(paymentRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(payment));
         given(orderRepository.findById(10L)).willReturn(Optional.of(order));
+        given(orderItemRepository.findAllByOrderId(10L)).willReturn(List.of());
 
         refundPaymentService.refundPayment(1L, "testuser");
 
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+    }
+
+    @Test
+    @DisplayName("refundPayment - 환불 시 주문 상품의 재고가 복원된다")
+    void refundPayment_shouldRestoreStock() {
+        Payment payment = Payment.builder().id(1L).orderId(10L).userId(1L).method(PaymentMethod.CARD).status(PaymentStatus.COMPLETED).amount(6000L).build();
+        Order order = Order.builder().id(10L).userId(1L).status(OrderStatus.COMPLETED).totalPrice(6000L).build();
+        OrderItem item = OrderItem.builder().id(1L).orderId(10L).productId(20L).quantity(3).price(2000L).build();
+        Stock stock = Stock.builder().id(1L).productId(20L).quantity(7).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(paymentRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(payment));
+        given(orderRepository.findById(10L)).willReturn(Optional.of(order));
+        given(orderItemRepository.findAllByOrderId(10L)).willReturn(List.of(item));
+        given(stockRepository.findByProductId(20L)).willReturn(Optional.of(stock));
+
+        refundPaymentService.refundPayment(1L, "testuser");
+
+        assertThat(stock.getQuantity()).isEqualTo(10); // 7 + 3
     }
 
     @Test
