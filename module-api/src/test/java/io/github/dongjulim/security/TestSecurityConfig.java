@@ -25,6 +25,7 @@ public class TestSecurityConfig {
                 .antMatchers(HttpMethod.POST,   "/api/v2/product/categories").hasAnyRole("ADMIN", "MASTER")
                 .antMatchers(HttpMethod.PUT,    "/api/v2/product/categories/*").hasAnyRole("ADMIN", "MASTER")
                 .antMatchers(HttpMethod.DELETE, "/api/v2/product/categories/*").hasAnyRole("ADMIN", "MASTER")
+                .antMatchers(HttpMethod.PATCH,  "/api/v2/product/*/stock").hasAnyRole("ADMIN", "MASTER")
                 .anyRequest().authenticated();
         return http.build();
     }

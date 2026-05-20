@@ -5,6 +5,7 @@ import io.github.dongjulim.domain.cart.entity.CartItem;
 import io.github.dongjulim.domain.cart.repository.CartRepository;
 import io.github.dongjulim.domain.common.exception.CartEmptyException;
 import io.github.dongjulim.domain.common.exception.CartNotFoundException;
+import io.github.dongjulim.domain.common.exception.OutOfStockException;
 import io.github.dongjulim.domain.order.entity.Order;
 import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.enums.OrderStatus;
@@ -12,6 +13,8 @@ import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
+import io.github.dongjulim.domain.stock.entity.Stock;
+import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +52,9 @@ class SaveOrderFromCartServiceTest {
     private ProductRepository productRepository;
 
     @Mock
+    private StockRepository stockRepository;
+
+    @Mock
     private UserLoader userLoader;
 
     @InjectMocks
@@ -74,11 +80,15 @@ class SaveOrderFromCartServiceTest {
         ReflectionTestUtils.setField(cart, "cartItems", new java.util.ArrayList<>(List.of(item1, item2)));
 
         Order savedOrder = Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING).totalPrice(7000L).build();
+        Stock stock1 = Stock.builder().id(1L).productId(10L).quantity(10).build();
+        Stock stock2 = Stock.builder().id(2L).productId(20L).quantity(5).build();
 
         given(userLoader.load("testuser")).willReturn(user);
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
         given(productRepository.findByIdAndDeleteCheckFalse(20L)).willReturn(Optional.of(product2));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock1));
+        given(stockRepository.findByProductId(20L)).willReturn(Optional.of(stock2));
         given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
 
         saveOrderFromCartService.saveOrderFromCart("testuser");
@@ -92,6 +102,47 @@ class SaveOrderFromCartServiceTest {
     }
 
     @Test
+    @DisplayName("saveOrderFromCart - 주문 시 재고가 주문 수량만큼 차감된다")
+    void saveOrderFromCart_shouldDecreaseStock() {
+        Cart cart = Cart.builder().id(1L).userId(1L).build();
+        CartItem item = CartItem.builder().id(1L).cartId(1L).productId(10L).quantity(2).build();
+        ReflectionTestUtils.setField(cart, "cartItems", new java.util.ArrayList<>(List.of(item)));
+
+        Order savedOrder = Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING).totalPrice(4000L).build();
+        Stock stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
+        given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
+
+        saveOrderFromCartService.saveOrderFromCart("testuser");
+
+        assertThat(stock.getQuantity()).isEqualTo(8); // 10 - 2
+    }
+
+    @Test
+    @DisplayName("saveOrderFromCart - 재고가 부족하면 OutOfStockException을 던진다")
+    void saveOrderFromCart_throwsOutOfStockException_whenStockInsufficient() {
+        Cart cart = Cart.builder().id(1L).userId(1L).build();
+        CartItem item = CartItem.builder().id(1L).cartId(1L).productId(10L).quantity(5).build();
+        ReflectionTestUtils.setField(cart, "cartItems", new java.util.ArrayList<>(List.of(item)));
+
+        Stock stock = Stock.builder().id(1L).productId(10L).quantity(3).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
+        given(orderRepository.save(any(Order.class))).willReturn(
+                Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING).totalPrice(10000L).build());
+
+        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart("testuser"))
+                .isInstanceOf(OutOfStockException.class);
+    }
+
+    @Test
     @DisplayName("saveOrderFromCart - 주문 생성 후 장바구니가 비워진다")
     void saveOrderFromCart_shouldClearCartAfterOrder() {
         Cart cart = Cart.builder().id(1L).userId(1L).build();
@@ -100,10 +151,12 @@ class SaveOrderFromCartServiceTest {
         ReflectionTestUtils.setField(cart, "cartItems", mutableItems);
 
         Order savedOrder = Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING).totalPrice(2000L).build();
+        Stock stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
 
         given(userLoader.load("testuser")).willReturn(user);
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
         given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
 
         saveOrderFromCartService.saveOrderFromCart("testuser");

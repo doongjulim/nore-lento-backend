@@ -27,7 +27,9 @@ public enum ErrorCode {
     ORDER_ALREADY_HAS_DELIVERY("order-already-has-delivery", "Order Already Has Delivery"),
     DELIVERY_NOT_FOUND("delivery-not-found", "Delivery Not Found"),
     DELIVERY_STATUS_NOT_ADVANCABLE("delivery-status-not-advancable", "Delivery Status Not Advancable"),
-    DELIVERY_NOT_RETURNABLE("delivery-not-returnable", "Delivery Not Returnable");
+    DELIVERY_NOT_RETURNABLE("delivery-not-returnable", "Delivery Not Returnable"),
+    OUT_OF_STOCK("out-of-stock", "Out Of Stock"),
+    STOCK_NOT_FOUND("stock-not-found", "Stock Not Found");
 
     private final String code;
     private final String title;

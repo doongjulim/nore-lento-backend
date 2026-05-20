@@ -7,6 +7,8 @@ import io.github.dongjulim.domain.productCategory.entity.ProductCategory;
 import io.github.dongjulim.domain.productCategory.repository.ProductCategoryRepository;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
 import io.github.dongjulim.domain.product.usecase.SaveProductUseCase;
+import io.github.dongjulim.domain.stock.entity.Stock;
+import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ public class SaveProductService implements SaveProductUseCase {
 
     private final ProductRepository productRepository;
     private final ProductCategoryRepository productCategoryRepository;
+    private final StockRepository stockRepository;
     private final UserLoader userLoader;
 
     @Override
@@ -27,13 +30,16 @@ public class SaveProductService implements SaveProductUseCase {
         User user = userLoader.load(username);
         ProductCategory category = productCategoryRepository.findByIdAndDeleteCheckFalse(request.getCategoryId())
                 .orElseThrow(ProductCategoryNotFoundException::new);
-        Product product = Product.builder()
+        Product product = productRepository.save(Product.builder()
                 .userId(user.getId())
                 .name(request.getName())
                 .price(request.getPrice())
                 .description(request.getDescription())
                 .categoryId(category.getId())
-                .build();
-        productRepository.save(product);
+                .build());
+        stockRepository.save(Stock.builder()
+                .productId(product.getId())
+                .quantity(request.getStock())
+                .build());
     }
 }

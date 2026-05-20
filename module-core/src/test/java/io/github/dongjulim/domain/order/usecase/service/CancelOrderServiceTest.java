@@ -3,8 +3,12 @@ package io.github.dongjulim.domain.order.usecase.service;
 import io.github.dongjulim.domain.common.exception.OrderNotFoundException;
 import io.github.dongjulim.domain.common.exception.OrderNotCancellableException;
 import io.github.dongjulim.domain.order.entity.Order;
+import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.enums.OrderStatus;
+import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
+import io.github.dongjulim.domain.stock.entity.Stock;
+import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +31,12 @@ class CancelOrderServiceTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private OrderItemRepository orderItemRepository;
+
+    @Mock
+    private StockRepository stockRepository;
 
     @Mock
     private UserLoader userLoader;
@@ -47,10 +58,28 @@ class CancelOrderServiceTest {
 
         given(userLoader.load("testuser")).willReturn(user);
         given(orderRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(order));
+        given(orderItemRepository.findAllByOrderId(1L)).willReturn(List.of());
 
         cancelOrderService.cancelOrder(1L, "testuser");
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+    }
+
+    @Test
+    @DisplayName("cancelOrder - 취소 시 주문 상품의 재고가 복원된다")
+    void cancelOrder_shouldRestoreStock() {
+        Order order = Order.builder().id(1L).userId(1L).status(OrderStatus.PENDING).totalPrice(6000L).build();
+        OrderItem item1 = OrderItem.builder().id(1L).orderId(1L).productId(10L).quantity(3).price(2000L).build();
+        Stock stock = Stock.builder().id(1L).productId(10L).quantity(7).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(orderRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(order));
+        given(orderItemRepository.findAllByOrderId(1L)).willReturn(List.of(item1));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
+
+        cancelOrderService.cancelOrder(1L, "testuser");
+
+        assertThat(stock.getQuantity()).isEqualTo(10); // 7 + 3
     }
 
     @Test
