@@ -16,18 +16,20 @@ public class FindProductDetailResponse {
     private final Long price;
     private final String description;
     private final FindProductCategoryResponse category;
+    private final Integer stock;
     private final LocalDateTime createAt;
     private final String createBy;
     private final LocalDateTime updateAt;
     private final String updateBy;
 
-    public static FindProductDetailResponse from(Product product) {
+    public static FindProductDetailResponse from(Product product, int stock) {
         return FindProductDetailResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
                 .price(product.getPrice())
                 .description(product.getDescription())
                 .category(FindProductCategoryResponse.from(product.getCategory()))
+                .stock(stock)
                 .createAt(product.getCreateAt())
                 .createBy(product.getCreateBy())
                 .updateAt(product.getUpdateAt())
