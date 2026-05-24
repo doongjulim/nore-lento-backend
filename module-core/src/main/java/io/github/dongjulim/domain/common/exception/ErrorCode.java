@@ -29,7 +29,8 @@ public enum ErrorCode {
     DELIVERY_STATUS_NOT_ADVANCABLE("delivery-status-not-advancable", "Delivery Status Not Advancable"),
     DELIVERY_NOT_RETURNABLE("delivery-not-returnable", "Delivery Not Returnable"),
     OUT_OF_STOCK("out-of-stock", "Out Of Stock"),
-    STOCK_NOT_FOUND("stock-not-found", "Stock Not Found");
+    STOCK_NOT_FOUND("stock-not-found", "Stock Not Found"),
+    SHIPPING_ADDRESS_NOT_FOUND("shipping-address-not-found", "Shipping Address Not Found");
 
     private final String code;
     private final String title;
