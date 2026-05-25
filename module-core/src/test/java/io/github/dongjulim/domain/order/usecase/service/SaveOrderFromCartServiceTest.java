@@ -6,6 +6,7 @@ import io.github.dongjulim.domain.cart.repository.CartRepository;
 import io.github.dongjulim.domain.common.exception.CartEmptyException;
 import io.github.dongjulim.domain.common.exception.CartNotFoundException;
 import io.github.dongjulim.domain.common.exception.OutOfStockException;
+import io.github.dongjulim.domain.common.exception.ShippingAddressNotFoundException;
 import io.github.dongjulim.domain.order.entity.Order;
 import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.enums.OrderStatus;
@@ -13,6 +14,8 @@ import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
+import io.github.dongjulim.domain.shippingAddress.entity.ShippingAddress;
+import io.github.dongjulim.domain.shippingAddress.repository.ShippingAddressRepository;
 import io.github.dongjulim.domain.stock.entity.Stock;
 import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
@@ -55,6 +58,9 @@ class SaveOrderFromCartServiceTest {
     private StockRepository stockRepository;
 
     @Mock
+    private ShippingAddressRepository shippingAddressRepository;
+
+    @Mock
     private UserLoader userLoader;
 
     @InjectMocks
@@ -63,39 +69,45 @@ class SaveOrderFromCartServiceTest {
     private User user;
     private Product product1;
     private Product product2;
+    private ShippingAddress shippingAddress;
 
     @BeforeEach
     void setUp() {
         user = User.builder().id(1L).username("testuser").build();
         product1 = Product.builder().id(10L).name("사과").price(2000L).categoryId(1L).deleteCheck(false).build();
         product2 = Product.builder().id(20L).name("배").price(3000L).categoryId(1L).deleteCheck(false).build();
+        shippingAddress = ShippingAddress.builder().id(1L).userId(1L).recipientName("홍길동")
+                .phone("010-1234-5678").address("서울시 강남구").zipCode("12345").build();
     }
 
     @Test
-    @DisplayName("saveOrderFromCart - 장바구니 상품들로 주문이 정상적으로 생성된다")
+    @DisplayName("saveOrderFromCart - 장바구니 상품들로 주문이 배송지 ID와 함께 생성된다")
     void saveOrderFromCart_shouldCreateOrderFromCartItems() {
         Cart cart = Cart.builder().id(1L).userId(1L).build();
         CartItem item1 = CartItem.builder().id(1L).cartId(1L).productId(10L).quantity(2).build();
         CartItem item2 = CartItem.builder().id(2L).cartId(1L).productId(20L).quantity(1).build();
         ReflectionTestUtils.setField(cart, "cartItems", new java.util.ArrayList<>(List.of(item1, item2)));
 
-        Order savedOrder = Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING).totalPrice(7000L).build();
+        Order savedOrder = Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING)
+                .totalPrice(7000L).shippingAddressId(1L).build();
         Stock stock1 = Stock.builder().id(1L).productId(10L).quantity(10).build();
         Stock stock2 = Stock.builder().id(2L).productId(20L).quantity(5).build();
 
         given(userLoader.load("testuser")).willReturn(user);
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
         given(productRepository.findByIdAndDeleteCheckFalse(20L)).willReturn(Optional.of(product2));
         given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock1));
         given(stockRepository.findByProductId(20L)).willReturn(Optional.of(stock2));
         given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
 
-        saveOrderFromCartService.saveOrderFromCart("testuser");
+        saveOrderFromCartService.saveOrderFromCart(1L, "testuser");
 
         ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
         then(orderRepository).should().save(orderCaptor.capture());
-        assertThat(orderCaptor.getValue().getTotalPrice()).isEqualTo(7000L); // 2000*2 + 3000*1
+        assertThat(orderCaptor.getValue().getTotalPrice()).isEqualTo(7000L);
+        assertThat(orderCaptor.getValue().getShippingAddressId()).isEqualTo(1L);
 
         ArgumentCaptor<OrderItem> itemCaptor = ArgumentCaptor.forClass(OrderItem.class);
         then(orderItemRepository).should(org.mockito.Mockito.times(2)).save(itemCaptor.capture());
@@ -108,16 +120,18 @@ class SaveOrderFromCartServiceTest {
         CartItem item = CartItem.builder().id(1L).cartId(1L).productId(10L).quantity(2).build();
         ReflectionTestUtils.setField(cart, "cartItems", new java.util.ArrayList<>(List.of(item)));
 
-        Order savedOrder = Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING).totalPrice(4000L).build();
+        Order savedOrder = Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING)
+                .totalPrice(4000L).shippingAddressId(1L).build();
         Stock stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
 
         given(userLoader.load("testuser")).willReturn(user);
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
         given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
         given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
 
-        saveOrderFromCartService.saveOrderFromCart("testuser");
+        saveOrderFromCartService.saveOrderFromCart(1L, "testuser");
 
         assertThat(stock.getQuantity()).isEqualTo(8); // 10 - 2
     }
@@ -133,12 +147,14 @@ class SaveOrderFromCartServiceTest {
 
         given(userLoader.load("testuser")).willReturn(user);
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
         given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
         given(orderRepository.save(any(Order.class))).willReturn(
-                Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING).totalPrice(10000L).build());
+                Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING)
+                        .totalPrice(10000L).shippingAddressId(1L).build());
 
-        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart("testuser"))
+        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(1L, "testuser"))
                 .isInstanceOf(OutOfStockException.class);
     }
 
@@ -150,16 +166,18 @@ class SaveOrderFromCartServiceTest {
         List<CartItem> mutableItems = new java.util.ArrayList<>(List.of(item));
         ReflectionTestUtils.setField(cart, "cartItems", mutableItems);
 
-        Order savedOrder = Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING).totalPrice(2000L).build();
+        Order savedOrder = Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING)
+                .totalPrice(2000L).shippingAddressId(1L).build();
         Stock stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
 
         given(userLoader.load("testuser")).willReturn(user);
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
         given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
         given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
 
-        saveOrderFromCartService.saveOrderFromCart("testuser");
+        saveOrderFromCartService.saveOrderFromCart(1L, "testuser");
 
         assertThat(cart.getCartItems()).isEmpty();
     }
@@ -170,7 +188,7 @@ class SaveOrderFromCartServiceTest {
         given(userLoader.load("testuser")).willReturn(user);
         given(cartRepository.findByUserId(1L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart("testuser"))
+        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(1L, "testuser"))
                 .isInstanceOf(CartNotFoundException.class);
     }
 
@@ -183,7 +201,22 @@ class SaveOrderFromCartServiceTest {
         given(userLoader.load("testuser")).willReturn(user);
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
 
-        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart("testuser"))
+        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(1L, "testuser"))
                 .isInstanceOf(CartEmptyException.class);
+    }
+
+    @Test
+    @DisplayName("saveOrderFromCart - 존재하지 않거나 다른 사용자의 배송지면 ShippingAddressNotFoundException을 던진다")
+    void saveOrderFromCart_throwsShippingAddressNotFoundException_whenAddressNotFound() {
+        Cart cart = Cart.builder().id(1L).userId(1L).build();
+        CartItem item = CartItem.builder().id(1L).cartId(1L).productId(10L).quantity(1).build();
+        ReflectionTestUtils.setField(cart, "cartItems", new java.util.ArrayList<>(List.of(item)));
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(1L, "testuser"))
+                .isInstanceOf(ShippingAddressNotFoundException.class);
     }
 }

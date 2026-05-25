@@ -1,6 +1,7 @@
 package io.github.dongjulim.domain.order.usecase.service;
 
 import io.github.dongjulim.domain.common.exception.ProductNotFoundException;
+import io.github.dongjulim.domain.common.exception.ShippingAddressNotFoundException;
 import io.github.dongjulim.domain.common.exception.StockNotFoundException;
 import io.github.dongjulim.domain.order.dto.OrderItemRequest;
 import io.github.dongjulim.domain.order.dto.SaveOrderRequest;
@@ -11,6 +12,7 @@ import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.order.usecase.SaveOrderUseCase;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
+import io.github.dongjulim.domain.shippingAddress.repository.ShippingAddressRepository;
 import io.github.dongjulim.domain.stock.entity.Stock;
 import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
@@ -28,11 +30,15 @@ public class SaveOrderService implements SaveOrderUseCase {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final StockRepository stockRepository;
+    private final ShippingAddressRepository shippingAddressRepository;
     private final UserLoader userLoader;
 
     @Override
     public void saveOrder(SaveOrderRequest request, String username) {
         User user = userLoader.load(username);
+
+        shippingAddressRepository.findByIdAndUserId(request.getShippingAddressId(), user.getId())
+                .orElseThrow(ShippingAddressNotFoundException::new);
 
         long totalPrice = 0L;
         for (OrderItemRequest item : request.getOrderItems()) {
@@ -43,6 +49,7 @@ public class SaveOrderService implements SaveOrderUseCase {
 
         Order order = orderRepository.save(Order.builder()
                 .userId(user.getId())
+                .shippingAddressId(request.getShippingAddressId())
                 .totalPrice(totalPrice)
                 .build());
 

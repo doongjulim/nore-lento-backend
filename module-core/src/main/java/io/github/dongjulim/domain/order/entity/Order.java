@@ -34,6 +34,9 @@ public class Order extends BaseEntity {
     @Column(nullable = false)
     private Long totalPrice;
 
+    @Column(name = "shipping_address_id")
+    private Long shippingAddressId;
+
     @Column(columnDefinition = "default 'false'")
     private Boolean deleteCheck;
 
@@ -44,6 +47,7 @@ public class Order extends BaseEntity {
     public Order(
             Long id,
             Long userId,
+            Long shippingAddressId,
             OrderStatus status,
             Long totalPrice,
             Boolean deleteCheck,
@@ -55,6 +59,7 @@ public class Order extends BaseEntity {
         super(createAt, createBy, updateAt, updateBy);
         this.id = id;
         this.userId = userId;
+        this.shippingAddressId = shippingAddressId;
         this.status = status != null ? status : OrderStatus.PENDING;
         this.totalPrice = totalPrice;
         this.deleteCheck = deleteCheck != null ? deleteCheck : false;

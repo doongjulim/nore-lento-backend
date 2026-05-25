@@ -47,9 +47,10 @@ class FindOrderDetailServiceTest {
     }
 
     @Test
-    @DisplayName("findOrderDetail - 주문 상세 정보를 반환한다")
+    @DisplayName("findOrderDetail - 주문 상세 정보를 배송지 ID와 함께 반환한다")
     void findOrderDetail_shouldReturnOrderDetail() {
-        Order order = Order.builder().id(1L).userId(1L).status(OrderStatus.PENDING).totalPrice(5000L).build();
+        Order order = Order.builder().id(1L).userId(1L).status(OrderStatus.PENDING)
+                .totalPrice(5000L).shippingAddressId(2L).build();
         OrderItem item = OrderItem.builder().id(1L).orderId(1L).productId(10L).quantity(2).price(2500L).build();
 
         given(userLoader.load("testuser")).willReturn(user);
@@ -61,6 +62,7 @@ class FindOrderDetailServiceTest {
         assertThat(result.getOrderId()).isEqualTo(1L);
         assertThat(result.getStatus()).isEqualTo(OrderStatus.PENDING);
         assertThat(result.getTotalPrice()).isEqualTo(5000L);
+        assertThat(result.getShippingAddressId()).isEqualTo(2L);
         assertThat(result.getItems()).hasSize(1);
         assertThat(result.getItems().get(0).getProductId()).isEqualTo(10L);
         assertThat(result.getItems().get(0).getQuantity()).isEqualTo(2);

@@ -17,6 +17,7 @@ public class FindOrderDetailResponse {
     private final Long orderId;
     private final OrderStatus status;
     private final Long totalPrice;
+    private final Long shippingAddressId;
     private final List<OrderItemResponse> items;
     private final LocalDateTime createAt;
 
@@ -25,6 +26,7 @@ public class FindOrderDetailResponse {
                 .orderId(order.getId())
                 .status(order.getStatus())
                 .totalPrice(order.getTotalPrice())
+                .shippingAddressId(order.getShippingAddressId())
                 .items(items.stream().map(OrderItemResponse::from).collect(Collectors.toList()))
                 .createAt(order.getCreateAt())
                 .build();
