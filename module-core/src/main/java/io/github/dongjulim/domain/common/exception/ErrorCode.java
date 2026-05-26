@@ -30,7 +30,9 @@ public enum ErrorCode {
     DELIVERY_NOT_RETURNABLE("delivery-not-returnable", "Delivery Not Returnable"),
     OUT_OF_STOCK("out-of-stock", "Out Of Stock"),
     STOCK_NOT_FOUND("stock-not-found", "Stock Not Found"),
-    SHIPPING_ADDRESS_NOT_FOUND("shipping-address-not-found", "Shipping Address Not Found");
+    SHIPPING_ADDRESS_NOT_FOUND("shipping-address-not-found", "Shipping Address Not Found"),
+    WISHLIST_NOT_FOUND("wishlist-not-found", "Wishlist Not Found"),
+    ALREADY_WISHLISTED("already-wishlisted", "Already Wishlisted");
 
     private final String code;
     private final String title;
