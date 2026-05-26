@@ -64,6 +64,8 @@ public class SecurityConfig {
                 .antMatchers(HttpMethod.PUT,    "/api/v2/product/categories/*").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
                 .antMatchers(HttpMethod.DELETE, "/api/v2/product/categories/*").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
                 .antMatchers(HttpMethod.PATCH,  "/api/v2/product/*/stock").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
+                .antMatchers(HttpMethod.POST,   "/api/v2/coupons").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
+                .antMatchers(HttpMethod.POST,   "/api/v2/coupons/*/users/*").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
                 .and()
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .exceptionHandling()

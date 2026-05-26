@@ -1,9 +1,18 @@
 package io.github.dongjulim.domain.order.usecase.service;
 
+import io.github.dongjulim.domain.common.exception.CouponAlreadyUsedException;
+import io.github.dongjulim.domain.common.exception.CouponExpiredException;
+import io.github.dongjulim.domain.common.exception.CouponNotFoundException;
+import io.github.dongjulim.domain.common.exception.OrderAmountNotEnoughException;
 import io.github.dongjulim.domain.common.exception.OutOfStockException;
 import io.github.dongjulim.domain.common.exception.ProductNotFoundException;
 import io.github.dongjulim.domain.common.exception.ShippingAddressNotFoundException;
 import io.github.dongjulim.domain.common.exception.StockNotFoundException;
+import io.github.dongjulim.domain.coupon.entity.Coupon;
+import io.github.dongjulim.domain.coupon.entity.UserCoupon;
+import io.github.dongjulim.domain.coupon.enums.DiscountType;
+import io.github.dongjulim.domain.coupon.repository.CouponRepository;
+import io.github.dongjulim.domain.coupon.repository.UserCouponRepository;
 import io.github.dongjulim.domain.order.dto.OrderItemRequest;
 import io.github.dongjulim.domain.order.dto.SaveOrderRequest;
 import io.github.dongjulim.domain.order.entity.Order;
@@ -29,6 +38,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,6 +65,12 @@ class SaveOrderServiceTest {
 
     @Mock
     private ShippingAddressRepository shippingAddressRepository;
+
+    @Mock
+    private UserCouponRepository userCouponRepository;
+
+    @Mock
+    private CouponRepository couponRepository;
 
     @Mock
     private UserLoader userLoader;
@@ -195,5 +211,125 @@ class SaveOrderServiceTest {
 
         assertThatThrownBy(() -> saveOrderService.saveOrder(request, "testuser"))
                 .isInstanceOf(ShippingAddressNotFoundException.class);
+    }
+
+    private SaveOrderRequest buildRequestWithCoupon(long productId, int quantity, Long userCouponId) {
+        SaveOrderRequest request = buildRequest(productId, quantity);
+        ReflectionTestUtils.setField(request, "userCouponId", userCouponId);
+        return request;
+    }
+
+    @Test
+    @DisplayName("saveOrder - 정액 쿠폰 적용 시 할인된 금액으로 주문이 생성되고 쿠폰이 사용 처리된다")
+    void saveOrder_shouldApplyFixedDiscountAndMarkCouponUsed() {
+        SaveOrderRequest request = buildRequestWithCoupon(10L, 3, 1L);
+        UserCoupon userCoupon = UserCoupon.builder().id(1L).userId(1L).couponId(10L).isUsed(false).build();
+        Coupon coupon = Coupon.builder().id(10L).name("1000원 할인").discountType(DiscountType.FIXED).discountValue(1000L).build();
+        Stock stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
+        Order savedOrder = Order.builder().id(100L).userId(1L).totalPrice(5000L).shippingAddressId(1L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
+        given(userCouponRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(userCoupon));
+        given(couponRepository.findById(10L)).willReturn(Optional.of(coupon));
+        given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
+
+        saveOrderService.saveOrder(request, "testuser");
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        then(orderRepository).should().save(orderCaptor.capture());
+        assertThat(orderCaptor.getValue().getTotalPrice()).isEqualTo(5000L); // 6000 - 1000
+        assertThat(userCoupon.getIsUsed()).isTrue();
+    }
+
+    @Test
+    @DisplayName("saveOrder - 퍼센트 쿠폰 적용 시 할인된 금액으로 주문이 생성된다")
+    void saveOrder_shouldApplyPercentageDiscount() {
+        SaveOrderRequest request = buildRequestWithCoupon(10L, 3, 1L);
+        UserCoupon userCoupon = UserCoupon.builder().id(1L).userId(1L).couponId(10L).isUsed(false).build();
+        Coupon coupon = Coupon.builder().id(10L).name("10% 할인").discountType(DiscountType.PERCENTAGE).discountValue(10L).build();
+        Stock stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
+        Order savedOrder = Order.builder().id(100L).userId(1L).totalPrice(5400L).shippingAddressId(1L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
+        given(userCouponRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(userCoupon));
+        given(couponRepository.findById(10L)).willReturn(Optional.of(coupon));
+        given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
+
+        saveOrderService.saveOrder(request, "testuser");
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        then(orderRepository).should().save(orderCaptor.capture());
+        assertThat(orderCaptor.getValue().getTotalPrice()).isEqualTo(5400L); // 6000 * 90 / 100
+    }
+
+    @Test
+    @DisplayName("saveOrder - 존재하지 않는 쿠폰이면 CouponNotFoundException을 던진다")
+    void saveOrder_throwsCouponNotFoundException_whenCouponNotFound() {
+        SaveOrderRequest request = buildRequestWithCoupon(10L, 1, 99L);
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(userCouponRepository.findByIdAndUserId(99L, 1L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> saveOrderService.saveOrder(request, "testuser"))
+                .isInstanceOf(CouponNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("saveOrder - 이미 사용된 쿠폰이면 CouponAlreadyUsedException을 던진다")
+    void saveOrder_throwsCouponAlreadyUsedException_whenCouponAlreadyUsed() {
+        SaveOrderRequest request = buildRequestWithCoupon(10L, 1, 1L);
+        UserCoupon usedCoupon = UserCoupon.builder().id(1L).userId(1L).couponId(10L).isUsed(true).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(userCouponRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(usedCoupon));
+
+        assertThatThrownBy(() -> saveOrderService.saveOrder(request, "testuser"))
+                .isInstanceOf(CouponAlreadyUsedException.class);
+    }
+
+    @Test
+    @DisplayName("saveOrder - 만료된 쿠폰이면 CouponExpiredException을 던진다")
+    void saveOrder_throwsCouponExpiredException_whenCouponExpired() {
+        SaveOrderRequest request = buildRequestWithCoupon(10L, 1, 1L);
+        UserCoupon userCoupon = UserCoupon.builder().id(1L).userId(1L).couponId(10L).isUsed(false).build();
+        Coupon expiredCoupon = Coupon.builder().id(10L).name("만료쿠폰").discountType(DiscountType.FIXED)
+                .discountValue(1000L).expiresAt(LocalDateTime.now().minusDays(1)).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(userCouponRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(userCoupon));
+        given(couponRepository.findById(10L)).willReturn(Optional.of(expiredCoupon));
+
+        assertThatThrownBy(() -> saveOrderService.saveOrder(request, "testuser"))
+                .isInstanceOf(CouponExpiredException.class);
+    }
+
+    @Test
+    @DisplayName("saveOrder - 최소 주문 금액 미달이면 OrderAmountNotEnoughException을 던진다")
+    void saveOrder_throwsOrderAmountNotEnoughException_whenAmountBelowMinimum() {
+        SaveOrderRequest request = buildRequestWithCoupon(10L, 1, 1L); // totalPrice = 2000
+        UserCoupon userCoupon = UserCoupon.builder().id(1L).userId(1L).couponId(10L).isUsed(false).build();
+        Coupon coupon = Coupon.builder().id(10L).name("할인쿠폰").discountType(DiscountType.FIXED)
+                .discountValue(1000L).minOrderAmount(5000L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(userCouponRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(userCoupon));
+        given(couponRepository.findById(10L)).willReturn(Optional.of(coupon));
+
+        assertThatThrownBy(() -> saveOrderService.saveOrder(request, "testuser"))
+                .isInstanceOf(OrderAmountNotEnoughException.class);
     }
 }

@@ -23,7 +23,7 @@ public class SaveOrderFromCartController {
             @RequestBody @Valid SaveOrderFromCartRequest request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        saveOrderFromCartUseCase.saveOrderFromCart(request.getShippingAddressId(), userDetails.getUsername());
+        saveOrderFromCartUseCase.saveOrderFromCart(request, userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
 }

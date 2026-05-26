@@ -11,4 +11,6 @@ public class SaveOrderFromCartRequest {
 
     @NotNull
     private Long shippingAddressId;
+
+    private Long userCouponId;
 }

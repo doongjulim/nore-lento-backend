@@ -1,8 +1,16 @@
 package io.github.dongjulim.domain.order.usecase.service;
 
+import io.github.dongjulim.domain.common.exception.CouponAlreadyUsedException;
+import io.github.dongjulim.domain.common.exception.CouponExpiredException;
+import io.github.dongjulim.domain.common.exception.CouponNotFoundException;
+import io.github.dongjulim.domain.common.exception.OrderAmountNotEnoughException;
 import io.github.dongjulim.domain.common.exception.ProductNotFoundException;
 import io.github.dongjulim.domain.common.exception.ShippingAddressNotFoundException;
 import io.github.dongjulim.domain.common.exception.StockNotFoundException;
+import io.github.dongjulim.domain.coupon.entity.Coupon;
+import io.github.dongjulim.domain.coupon.entity.UserCoupon;
+import io.github.dongjulim.domain.coupon.repository.CouponRepository;
+import io.github.dongjulim.domain.coupon.repository.UserCouponRepository;
 import io.github.dongjulim.domain.order.dto.OrderItemRequest;
 import io.github.dongjulim.domain.order.dto.SaveOrderRequest;
 import io.github.dongjulim.domain.order.entity.Order;
@@ -31,6 +39,8 @@ public class SaveOrderService implements SaveOrderUseCase {
     private final ProductRepository productRepository;
     private final StockRepository stockRepository;
     private final ShippingAddressRepository shippingAddressRepository;
+    private final UserCouponRepository userCouponRepository;
+    private final CouponRepository couponRepository;
     private final UserLoader userLoader;
 
     @Override
@@ -45,6 +55,10 @@ public class SaveOrderService implements SaveOrderUseCase {
             Product product = productRepository.findByIdAndDeleteCheckFalse(item.getProductId())
                     .orElseThrow(ProductNotFoundException::new);
             totalPrice += product.getPrice() * item.getQuantity();
+        }
+
+        if (request.getUserCouponId() != null) {
+            totalPrice = applyCoupon(request.getUserCouponId(), user.getId(), totalPrice);
         }
 
         Order order = orderRepository.save(Order.builder()
@@ -66,5 +80,19 @@ public class SaveOrderService implements SaveOrderUseCase {
                     .price(product.getPrice())
                     .build());
         }
+    }
+
+    private long applyCoupon(Long userCouponId, Long userId, long totalPrice) {
+        UserCoupon userCoupon = userCouponRepository.findByIdAndUserId(userCouponId, userId)
+                .orElseThrow(CouponNotFoundException::new);
+        if (userCoupon.getIsUsed()) throw new CouponAlreadyUsedException();
+
+        Coupon coupon = couponRepository.findById(userCoupon.getCouponId())
+                .orElseThrow(CouponNotFoundException::new);
+        if (coupon.isExpired()) throw new CouponExpiredException();
+        if (!coupon.isApplicable(totalPrice)) throw new OrderAmountNotEnoughException();
+
+        userCoupon.use();
+        return coupon.applyDiscount(totalPrice);
     }
 }

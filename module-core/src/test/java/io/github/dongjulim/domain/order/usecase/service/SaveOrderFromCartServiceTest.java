@@ -5,8 +5,15 @@ import io.github.dongjulim.domain.cart.entity.CartItem;
 import io.github.dongjulim.domain.cart.repository.CartRepository;
 import io.github.dongjulim.domain.common.exception.CartEmptyException;
 import io.github.dongjulim.domain.common.exception.CartNotFoundException;
+import io.github.dongjulim.domain.common.exception.CouponNotFoundException;
 import io.github.dongjulim.domain.common.exception.OutOfStockException;
 import io.github.dongjulim.domain.common.exception.ShippingAddressNotFoundException;
+import io.github.dongjulim.domain.coupon.entity.Coupon;
+import io.github.dongjulim.domain.coupon.entity.UserCoupon;
+import io.github.dongjulim.domain.coupon.enums.DiscountType;
+import io.github.dongjulim.domain.coupon.repository.CouponRepository;
+import io.github.dongjulim.domain.coupon.repository.UserCouponRepository;
+import io.github.dongjulim.domain.order.dto.SaveOrderFromCartRequest;
 import io.github.dongjulim.domain.order.entity.Order;
 import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.enums.OrderStatus;
@@ -61,6 +68,12 @@ class SaveOrderFromCartServiceTest {
     private ShippingAddressRepository shippingAddressRepository;
 
     @Mock
+    private UserCouponRepository userCouponRepository;
+
+    @Mock
+    private CouponRepository couponRepository;
+
+    @Mock
     private UserLoader userLoader;
 
     @InjectMocks
@@ -78,6 +91,13 @@ class SaveOrderFromCartServiceTest {
         product2 = Product.builder().id(20L).name("배").price(3000L).categoryId(1L).deleteCheck(false).build();
         shippingAddress = ShippingAddress.builder().id(1L).userId(1L).recipientName("홍길동")
                 .phone("010-1234-5678").address("서울시 강남구").zipCode("12345").build();
+    }
+
+    private SaveOrderFromCartRequest buildRequest(Long shippingAddressId, Long userCouponId) {
+        SaveOrderFromCartRequest request = new SaveOrderFromCartRequest();
+        ReflectionTestUtils.setField(request, "shippingAddressId", shippingAddressId);
+        ReflectionTestUtils.setField(request, "userCouponId", userCouponId);
+        return request;
     }
 
     @Test
@@ -102,7 +122,7 @@ class SaveOrderFromCartServiceTest {
         given(stockRepository.findByProductId(20L)).willReturn(Optional.of(stock2));
         given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
 
-        saveOrderFromCartService.saveOrderFromCart(1L, "testuser");
+        saveOrderFromCartService.saveOrderFromCart(buildRequest(1L, null), "testuser");
 
         ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
         then(orderRepository).should().save(orderCaptor.capture());
@@ -131,7 +151,7 @@ class SaveOrderFromCartServiceTest {
         given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
         given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
 
-        saveOrderFromCartService.saveOrderFromCart(1L, "testuser");
+        saveOrderFromCartService.saveOrderFromCart(buildRequest(1L, null), "testuser");
 
         assertThat(stock.getQuantity()).isEqualTo(8); // 10 - 2
     }
@@ -154,7 +174,7 @@ class SaveOrderFromCartServiceTest {
                 Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING)
                         .totalPrice(10000L).shippingAddressId(1L).build());
 
-        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(1L, "testuser"))
+        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(buildRequest(1L, null), "testuser"))
                 .isInstanceOf(OutOfStockException.class);
     }
 
@@ -177,7 +197,7 @@ class SaveOrderFromCartServiceTest {
         given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
         given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
 
-        saveOrderFromCartService.saveOrderFromCart(1L, "testuser");
+        saveOrderFromCartService.saveOrderFromCart(buildRequest(1L, null), "testuser");
 
         assertThat(cart.getCartItems()).isEmpty();
     }
@@ -188,7 +208,7 @@ class SaveOrderFromCartServiceTest {
         given(userLoader.load("testuser")).willReturn(user);
         given(cartRepository.findByUserId(1L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(1L, "testuser"))
+        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(buildRequest(1L, null), "testuser"))
                 .isInstanceOf(CartNotFoundException.class);
     }
 
@@ -201,7 +221,7 @@ class SaveOrderFromCartServiceTest {
         given(userLoader.load("testuser")).willReturn(user);
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
 
-        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(1L, "testuser"))
+        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(buildRequest(1L, null), "testuser"))
                 .isInstanceOf(CartEmptyException.class);
     }
 
@@ -216,7 +236,53 @@ class SaveOrderFromCartServiceTest {
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
         given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(1L, "testuser"))
+        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(buildRequest(1L, null), "testuser"))
                 .isInstanceOf(ShippingAddressNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("saveOrderFromCart - 쿠폰 적용 시 할인된 금액으로 주문이 생성되고 쿠폰이 사용 처리된다")
+    void saveOrderFromCart_shouldApplyDiscountAndMarkCouponUsed() {
+        Cart cart = Cart.builder().id(1L).userId(1L).build();
+        CartItem item = CartItem.builder().id(1L).cartId(1L).productId(10L).quantity(3).build();
+        ReflectionTestUtils.setField(cart, "cartItems", new java.util.ArrayList<>(List.of(item)));
+
+        UserCoupon userCoupon = UserCoupon.builder().id(1L).userId(1L).couponId(10L).isUsed(false).build();
+        Coupon coupon = Coupon.builder().id(10L).name("1000원 할인").discountType(DiscountType.FIXED).discountValue(1000L).build();
+        Stock stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
+        Order savedOrder = Order.builder().id(100L).userId(1L).totalPrice(5000L).shippingAddressId(1L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
+        given(userCouponRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(userCoupon));
+        given(couponRepository.findById(10L)).willReturn(Optional.of(coupon));
+        given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
+
+        saveOrderFromCartService.saveOrderFromCart(buildRequest(1L, 1L), "testuser");
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        then(orderRepository).should().save(orderCaptor.capture());
+        assertThat(orderCaptor.getValue().getTotalPrice()).isEqualTo(5000L); // 6000 - 1000
+        assertThat(userCoupon.getIsUsed()).isTrue();
+    }
+
+    @Test
+    @DisplayName("saveOrderFromCart - 존재하지 않는 쿠폰이면 CouponNotFoundException을 던진다")
+    void saveOrderFromCart_throwsCouponNotFoundException_whenCouponNotFound() {
+        Cart cart = Cart.builder().id(1L).userId(1L).build();
+        CartItem item = CartItem.builder().id(1L).cartId(1L).productId(10L).quantity(1).build();
+        ReflectionTestUtils.setField(cart, "cartItems", new java.util.ArrayList<>(List.of(item)));
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
+        given(userCouponRepository.findByIdAndUserId(99L, 1L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(buildRequest(1L, 99L), "testuser"))
+                .isInstanceOf(CouponNotFoundException.class);
     }
 }

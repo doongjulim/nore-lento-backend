@@ -32,7 +32,11 @@ public enum ErrorCode {
     STOCK_NOT_FOUND("stock-not-found", "Stock Not Found"),
     SHIPPING_ADDRESS_NOT_FOUND("shipping-address-not-found", "Shipping Address Not Found"),
     WISHLIST_NOT_FOUND("wishlist-not-found", "Wishlist Not Found"),
-    ALREADY_WISHLISTED("already-wishlisted", "Already Wishlisted");
+    ALREADY_WISHLISTED("already-wishlisted", "Already Wishlisted"),
+    COUPON_NOT_FOUND("coupon-not-found", "Coupon Not Found"),
+    COUPON_ALREADY_USED("coupon-already-used", "Coupon Already Used"),
+    COUPON_EXPIRED("coupon-expired", "Coupon Expired"),
+    ORDER_AMOUNT_NOT_ENOUGH("order-amount-not-enough", "Order Amount Not Enough");
 
     private final String code;
     private final String title;

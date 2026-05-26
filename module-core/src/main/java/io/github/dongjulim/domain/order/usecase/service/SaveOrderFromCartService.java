@@ -5,9 +5,18 @@ import io.github.dongjulim.domain.cart.entity.CartItem;
 import io.github.dongjulim.domain.cart.repository.CartRepository;
 import io.github.dongjulim.domain.common.exception.CartEmptyException;
 import io.github.dongjulim.domain.common.exception.CartNotFoundException;
+import io.github.dongjulim.domain.common.exception.CouponAlreadyUsedException;
+import io.github.dongjulim.domain.common.exception.CouponExpiredException;
+import io.github.dongjulim.domain.common.exception.CouponNotFoundException;
+import io.github.dongjulim.domain.common.exception.OrderAmountNotEnoughException;
 import io.github.dongjulim.domain.common.exception.ProductNotFoundException;
 import io.github.dongjulim.domain.common.exception.ShippingAddressNotFoundException;
 import io.github.dongjulim.domain.common.exception.StockNotFoundException;
+import io.github.dongjulim.domain.coupon.entity.Coupon;
+import io.github.dongjulim.domain.coupon.entity.UserCoupon;
+import io.github.dongjulim.domain.coupon.repository.CouponRepository;
+import io.github.dongjulim.domain.coupon.repository.UserCouponRepository;
+import io.github.dongjulim.domain.order.dto.SaveOrderFromCartRequest;
 import io.github.dongjulim.domain.order.entity.Order;
 import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.repository.OrderItemRepository;
@@ -37,10 +46,12 @@ public class SaveOrderFromCartService implements SaveOrderFromCartUseCase {
     private final ProductRepository productRepository;
     private final StockRepository stockRepository;
     private final ShippingAddressRepository shippingAddressRepository;
+    private final UserCouponRepository userCouponRepository;
+    private final CouponRepository couponRepository;
     private final UserLoader userLoader;
 
     @Override
-    public void saveOrderFromCart(Long shippingAddressId, String username) {
+    public void saveOrderFromCart(SaveOrderFromCartRequest request, String username) {
         User user = userLoader.load(username);
 
         Cart cart = cartRepository.findByUserId(user.getId())
@@ -51,7 +62,7 @@ public class SaveOrderFromCartService implements SaveOrderFromCartUseCase {
             throw new CartEmptyException();
         }
 
-        shippingAddressRepository.findByIdAndUserId(shippingAddressId, user.getId())
+        shippingAddressRepository.findByIdAndUserId(request.getShippingAddressId(), user.getId())
                 .orElseThrow(ShippingAddressNotFoundException::new);
 
         long totalPrice = 0L;
@@ -61,9 +72,13 @@ public class SaveOrderFromCartService implements SaveOrderFromCartUseCase {
             totalPrice += product.getPrice() * cartItem.getQuantity();
         }
 
+        if (request.getUserCouponId() != null) {
+            totalPrice = applyCoupon(request.getUserCouponId(), user.getId(), totalPrice);
+        }
+
         Order order = orderRepository.save(Order.builder()
                 .userId(user.getId())
-                .shippingAddressId(shippingAddressId)
+                .shippingAddressId(request.getShippingAddressId())
                 .totalPrice(totalPrice)
                 .build());
 
@@ -82,5 +97,19 @@ public class SaveOrderFromCartService implements SaveOrderFromCartUseCase {
         }
 
         cart.clearItems();
+    }
+
+    private long applyCoupon(Long userCouponId, Long userId, long totalPrice) {
+        UserCoupon userCoupon = userCouponRepository.findByIdAndUserId(userCouponId, userId)
+                .orElseThrow(CouponNotFoundException::new);
+        if (userCoupon.getIsUsed()) throw new CouponAlreadyUsedException();
+
+        Coupon coupon = couponRepository.findById(userCoupon.getCouponId())
+                .orElseThrow(CouponNotFoundException::new);
+        if (coupon.isExpired()) throw new CouponExpiredException();
+        if (!coupon.isApplicable(totalPrice)) throw new OrderAmountNotEnoughException();
+
+        userCoupon.use();
+        return coupon.applyDiscount(totalPrice);
     }
 }

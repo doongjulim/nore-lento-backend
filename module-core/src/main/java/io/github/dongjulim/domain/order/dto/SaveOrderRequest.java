@@ -15,6 +15,8 @@ public class SaveOrderRequest {
     @NotNull
     private Long shippingAddressId;
 
+    private Long userCouponId;
+
     @Valid
     @NotEmpty
     private List<OrderItemRequest> orderItems;
