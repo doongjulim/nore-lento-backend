@@ -1,6 +1,8 @@
 package io.github.dongjulim.domain.review.usecase.service;
 
 import io.github.dongjulim.domain.common.exception.ProductNotFoundException;
+import io.github.dongjulim.domain.common.exception.ReviewNotEligibleException;
+import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
 import io.github.dongjulim.domain.review.dto.SaveReviewRequest;
@@ -35,6 +37,9 @@ class SaveReviewServiceTest {
     private ProductRepository productRepository;
 
     @Mock
+    private OrderItemRepository orderItemRepository;
+
+    @Mock
     private UserLoader userLoader;
 
     @InjectMocks
@@ -50,8 +55,8 @@ class SaveReviewServiceTest {
     }
 
     @Test
-    @DisplayName("saveReview - 리뷰가 정상적으로 저장된다")
-    void saveReview_shouldSaveReview() {
+    @DisplayName("saveReview - 구매 완료한 상품에 리뷰가 정상적으로 저장된다")
+    void saveReview_shouldSaveReview_whenUserHasPurchasedProduct() {
         SaveReviewRequest request = new SaveReviewRequest();
         ReflectionTestUtils.setField(request, "productId", 10L);
         ReflectionTestUtils.setField(request, "content", "맛있어요");
@@ -59,6 +64,7 @@ class SaveReviewServiceTest {
 
         given(userLoader.load("testuser")).willReturn(user);
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(orderItemRepository.existsCompletedOrderByUserIdAndProductId(1L, 10L)).willReturn(true);
 
         saveReviewService.saveReview(request, "testuser");
 
@@ -68,6 +74,22 @@ class SaveReviewServiceTest {
         assertThat(captor.getValue().getProductId()).isEqualTo(10L);
         assertThat(captor.getValue().getContent()).isEqualTo("맛있어요");
         assertThat(captor.getValue().getRating()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("saveReview - 구매 이력이 없으면 ReviewNotEligibleException을 던진다")
+    void saveReview_throwsReviewNotEligibleException_whenUserHasNotPurchasedProduct() {
+        SaveReviewRequest request = new SaveReviewRequest();
+        ReflectionTestUtils.setField(request, "productId", 10L);
+        ReflectionTestUtils.setField(request, "content", "맛있어요");
+        ReflectionTestUtils.setField(request, "rating", 5);
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(orderItemRepository.existsCompletedOrderByUserIdAndProductId(1L, 10L)).willReturn(false);
+
+        assertThatThrownBy(() -> saveReviewService.saveReview(request, "testuser"))
+                .isInstanceOf(ReviewNotEligibleException.class);
     }
 
     @Test

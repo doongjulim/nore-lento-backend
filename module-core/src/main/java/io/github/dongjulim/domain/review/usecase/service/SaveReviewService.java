@@ -1,6 +1,8 @@
 package io.github.dongjulim.domain.review.usecase.service;
 
 import io.github.dongjulim.domain.common.exception.ProductNotFoundException;
+import io.github.dongjulim.domain.common.exception.ReviewNotEligibleException;
+import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
 import io.github.dongjulim.domain.review.dto.SaveReviewRequest;
@@ -20,6 +22,7 @@ public class SaveReviewService implements SaveReviewUseCase {
 
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
+    private final OrderItemRepository orderItemRepository;
     private final UserLoader userLoader;
 
     @Override
@@ -28,6 +31,10 @@ public class SaveReviewService implements SaveReviewUseCase {
 
         Product product = productRepository.findByIdAndDeleteCheckFalse(request.getProductId())
                 .orElseThrow(ProductNotFoundException::new);
+
+        if (!orderItemRepository.existsCompletedOrderByUserIdAndProductId(user.getId(), product.getId())) {
+            throw new ReviewNotEligibleException();
+        }
 
         Review review = Review.builder()
                 .userId(user.getId())
