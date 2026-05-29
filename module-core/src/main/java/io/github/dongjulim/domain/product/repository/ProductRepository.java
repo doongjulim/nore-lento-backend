@@ -15,10 +15,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("SELECT p FROM product p WHERE p.deleteCheck = false" +
             " AND (:categoryId IS NULL OR p.categoryId = :categoryId)" +
-            " AND (:keyword IS NULL OR p.name LIKE %:keyword%)")
+            " AND (:keyword IS NULL OR p.name LIKE %:keyword%)" +
+            " AND (:minPrice IS NULL OR p.price >= :minPrice)" +
+            " AND (:maxPrice IS NULL OR p.price <= :maxPrice)")
     Page<Product> findAllBySearchCondition(
             @Param("categoryId") Long categoryId,
             @Param("keyword") String keyword,
+            @Param("minPrice") Long minPrice,
+            @Param("maxPrice") Long maxPrice,
             Pageable pageable
     );
 }

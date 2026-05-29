@@ -19,7 +19,12 @@ public class FindProductService implements FindProductUseCase {
 
     @Override
     public Page<FindProductResponse> findProduct(FindProductRequest request, Pageable pageable) {
-        return productRepository.findAllBySearchCondition(request.getCategoryId(), request.getKeyword(), pageable)
+        return productRepository.findAllBySearchCondition(
+                        request.getCategoryId(),
+                        request.getKeyword(),
+                        request.getMinPrice(),
+                        request.getMaxPrice(),
+                        pageable)
                 .map(FindProductResponse::from);
     }
 }
