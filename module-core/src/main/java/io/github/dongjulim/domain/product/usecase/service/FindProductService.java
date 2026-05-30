@@ -4,11 +4,14 @@ import io.github.dongjulim.domain.product.dto.FindProductRequest;
 import io.github.dongjulim.domain.product.dto.FindProductResponse;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
 import io.github.dongjulim.domain.product.usecase.FindProductUseCase;
+import io.github.dongjulim.domain.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class FindProductService implements FindProductUseCase {
 
     private final ProductRepository productRepository;
+    private final ReviewRepository reviewRepository;
 
     @Override
     public Page<FindProductResponse> findProduct(FindProductRequest request, Pageable pageable) {
@@ -25,6 +29,11 @@ public class FindProductService implements FindProductUseCase {
                         request.getMinPrice(),
                         request.getMaxPrice(),
                         pageable)
-                .map(FindProductResponse::from);
+                .map(product -> {
+                    double averageRating = Optional.ofNullable(
+                            reviewRepository.findAverageRatingByProductId(product.getId())).orElse(0.0);
+                    long reviewCount = reviewRepository.countByProductIdAndDeleteCheckFalse(product.getId());
+                    return FindProductResponse.from(product, averageRating, reviewCount);
+                });
     }
 }

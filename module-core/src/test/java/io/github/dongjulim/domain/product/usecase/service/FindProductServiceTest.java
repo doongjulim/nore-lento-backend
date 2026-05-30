@@ -5,6 +5,7 @@ import io.github.dongjulim.domain.product.dto.FindProductResponse;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
 import io.github.dongjulim.domain.productCategory.entity.ProductCategory;
+import io.github.dongjulim.domain.review.repository.ReviewRepository;
 import io.github.dongjulim.domain.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +30,9 @@ class FindProductServiceTest {
 
     @Mock
     private ProductRepository productRepository;
+
+    @Mock
+    private ReviewRepository reviewRepository;
 
     @InjectMocks
     private FindProductService findProductService;
@@ -88,6 +92,21 @@ class FindProductServiceTest {
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getPrice()).isEqualTo(2000L);
+    }
+
+    @Test
+    @DisplayName("findProduct - 상품 목록에 평균 평점과 리뷰 수가 포함된다")
+    void findProduct_shouldIncludeAverageRatingAndReviewCount() {
+        FindProductRequest request = new FindProductRequest();
+        given(productRepository.findAllBySearchCondition(null, null, null, null, pageable))
+                .willReturn(new PageImpl<>(List.of(product), pageable, 1));
+        given(reviewRepository.findAverageRatingByProductId(1L)).willReturn(3.5);
+        given(reviewRepository.countByProductIdAndDeleteCheckFalse(1L)).willReturn(5L);
+
+        Page<FindProductResponse> result = findProductService.findProduct(request, pageable);
+
+        assertThat(result.getContent().get(0).getAverageRating()).isEqualTo(3.5);
+        assertThat(result.getContent().get(0).getReviewCount()).isEqualTo(5L);
     }
 
     @Test

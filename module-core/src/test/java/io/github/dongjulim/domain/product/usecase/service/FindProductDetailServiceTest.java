@@ -5,6 +5,7 @@ import io.github.dongjulim.domain.product.dto.FindProductDetailResponse;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
 import io.github.dongjulim.domain.productCategory.entity.ProductCategory;
+import io.github.dongjulim.domain.review.repository.ReviewRepository;
 import io.github.dongjulim.domain.stock.entity.Stock;
 import io.github.dongjulim.domain.stock.repository.StockRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,9 @@ class FindProductDetailServiceTest {
 
     @Mock
     private StockRepository stockRepository;
+
+    @Mock
+    private ReviewRepository reviewRepository;
 
     @InjectMocks
     private FindProductDetailService findProductDetailService;
@@ -59,6 +63,34 @@ class FindProductDetailServiceTest {
         assertThat(result.getName()).isEqualTo("사과");
         assertThat(result.getPrice()).isEqualTo(2000L);
         assertThat(result.getStock()).isEqualTo(42);
+    }
+
+    @Test
+    @DisplayName("findProductDetail - 리뷰가 있으면 평균 평점과 리뷰 수를 반환한다")
+    void findProductDetail_shouldReturnAverageRatingAndReviewCount() {
+        given(productRepository.findByIdAndDeleteCheckFalse(1L)).willReturn(Optional.of(product));
+        given(stockRepository.findByProductId(1L)).willReturn(Optional.empty());
+        given(reviewRepository.findAverageRatingByProductId(1L)).willReturn(4.5);
+        given(reviewRepository.countByProductIdAndDeleteCheckFalse(1L)).willReturn(10L);
+
+        FindProductDetailResponse result = findProductDetailService.findProductDetail(1L);
+
+        assertThat(result.getAverageRating()).isEqualTo(4.5);
+        assertThat(result.getReviewCount()).isEqualTo(10L);
+    }
+
+    @Test
+    @DisplayName("findProductDetail - 리뷰가 없으면 평균 평점 0.0, 리뷰 수 0을 반환한다")
+    void findProductDetail_shouldReturnZero_whenNoReviews() {
+        given(productRepository.findByIdAndDeleteCheckFalse(1L)).willReturn(Optional.of(product));
+        given(stockRepository.findByProductId(1L)).willReturn(Optional.empty());
+        given(reviewRepository.findAverageRatingByProductId(1L)).willReturn(null);
+        given(reviewRepository.countByProductIdAndDeleteCheckFalse(1L)).willReturn(0L);
+
+        FindProductDetailResponse result = findProductDetailService.findProductDetail(1L);
+
+        assertThat(result.getAverageRating()).isEqualTo(0.0);
+        assertThat(result.getReviewCount()).isEqualTo(0L);
     }
 
     @Test

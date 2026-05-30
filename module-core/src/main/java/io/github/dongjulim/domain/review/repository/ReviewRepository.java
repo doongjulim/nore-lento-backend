@@ -16,4 +16,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query(value = "SELECT r FROM review r JOIN FETCH r.user WHERE r.productId = :productId AND r.deleteCheck = false",
            countQuery = "SELECT COUNT(r) FROM review r WHERE r.productId = :productId AND r.deleteCheck = false")
     Page<Review> findAllByProductId(@Param("productId") Long productId, Pageable pageable);
+
+    @Query("SELECT AVG(r.rating) FROM review r WHERE r.productId = :productId AND r.deleteCheck = false")
+    Double findAverageRatingByProductId(@Param("productId") Long productId);
+
+    long countByProductIdAndDeleteCheckFalse(Long productId);
 }

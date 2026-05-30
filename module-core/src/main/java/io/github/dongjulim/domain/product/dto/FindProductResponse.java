@@ -16,15 +16,19 @@ public class FindProductResponse {
     private final Long price;
     private final FindProductCategoryResponse category;
     private final String sellerName;
+    private final Double averageRating;
+    private final Long reviewCount;
     private final LocalDateTime createAt;
 
-    public static FindProductResponse from(Product product) {
+    public static FindProductResponse from(Product product, double averageRating, long reviewCount) {
         return FindProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
                 .price(product.getPrice())
                 .category(FindProductCategoryResponse.from(product.getCategory()))
                 .sellerName(product.getUser().getName())
+                .averageRating(averageRating)
+                .reviewCount(reviewCount)
                 .createAt(product.getCreateAt())
                 .build();
     }
