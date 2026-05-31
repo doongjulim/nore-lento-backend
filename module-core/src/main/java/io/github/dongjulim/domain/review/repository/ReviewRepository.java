@@ -21,4 +21,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Double findAverageRatingByProductId(@Param("productId") Long productId);
 
     long countByProductIdAndDeleteCheckFalse(Long productId);
+
+    boolean existsByUserIdAndProductIdAndDeleteCheckFalse(Long userId, Long productId);
 }

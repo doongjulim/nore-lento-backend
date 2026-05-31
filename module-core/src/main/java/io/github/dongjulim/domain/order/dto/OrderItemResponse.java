@@ -12,13 +12,15 @@ public class OrderItemResponse {
     private final Integer quantity;
     private final Long price;
     private final Long totalPrice;
+    private final boolean reviewable;
 
-    public static OrderItemResponse from(OrderItem item) {
+    public static OrderItemResponse from(OrderItem item, boolean reviewable) {
         return OrderItemResponse.builder()
                 .productId(item.getProductId())
                 .quantity(item.getQuantity())
                 .price(item.getPrice())
                 .totalPrice(item.getPrice() * item.getQuantity())
+                .reviewable(reviewable)
                 .build();
     }
 }
