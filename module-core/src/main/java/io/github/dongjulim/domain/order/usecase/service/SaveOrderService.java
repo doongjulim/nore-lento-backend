@@ -20,6 +20,7 @@ import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.order.usecase.SaveOrderUseCase;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
+import io.github.dongjulim.domain.shippingAddress.entity.ShippingAddress;
 import io.github.dongjulim.domain.shippingAddress.repository.ShippingAddressRepository;
 import io.github.dongjulim.domain.stock.entity.Stock;
 import io.github.dongjulim.domain.stock.repository.StockRepository;
@@ -47,8 +48,7 @@ public class SaveOrderService implements SaveOrderUseCase {
     public void saveOrder(SaveOrderRequest request, String username) {
         User user = userLoader.load(username);
 
-        shippingAddressRepository.findByIdAndUserId(request.getShippingAddressId(), user.getId())
-                .orElseThrow(ShippingAddressNotFoundException::new);
+        Long resolvedShippingAddressId = resolveShippingAddressId(request.getShippingAddressId(), user.getId());
 
         long totalPrice = 0L;
         for (OrderItemRequest item : request.getOrderItems()) {
@@ -63,7 +63,7 @@ public class SaveOrderService implements SaveOrderUseCase {
 
         Order order = orderRepository.save(Order.builder()
                 .userId(user.getId())
-                .shippingAddressId(request.getShippingAddressId())
+                .shippingAddressId(resolvedShippingAddressId)
                 .totalPrice(totalPrice)
                 .build());
 
@@ -80,6 +80,17 @@ public class SaveOrderService implements SaveOrderUseCase {
                     .price(product.getPrice())
                     .build());
         }
+    }
+
+    private Long resolveShippingAddressId(Long requestedId, Long userId) {
+        if (requestedId != null) {
+            shippingAddressRepository.findByIdAndUserId(requestedId, userId)
+                    .orElseThrow(ShippingAddressNotFoundException::new);
+            return requestedId;
+        }
+        return shippingAddressRepository.findByUserIdAndIsDefaultTrue(userId)
+                .map(ShippingAddress::getId)
+                .orElseThrow(ShippingAddressNotFoundException::new);
     }
 
     private long applyCoupon(Long userCouponId, Long userId, long totalPrice) {

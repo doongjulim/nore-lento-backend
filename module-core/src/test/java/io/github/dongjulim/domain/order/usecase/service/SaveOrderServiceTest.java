@@ -316,6 +316,52 @@ class SaveOrderServiceTest {
     }
 
     @Test
+    @DisplayName("saveOrder - shippingAddressId가 null이면 기본 배송지를 자동으로 사용한다")
+    void saveOrder_shouldUseDefaultShippingAddress_whenShippingAddressIdIsNull() {
+        SaveOrderRequest request = new SaveOrderRequest();
+        OrderItemRequest itemRequest = new OrderItemRequest();
+        ReflectionTestUtils.setField(itemRequest, "productId", 10L);
+        ReflectionTestUtils.setField(itemRequest, "quantity", 1);
+        ReflectionTestUtils.setField(request, "orderItems", List.of(itemRequest));
+        // shippingAddressId는 null
+
+        ShippingAddress defaultAddress = ShippingAddress.builder().id(5L).userId(1L)
+                .recipientName("홍길동").phone("010-1234-5678").address("서울시 강남구").zipCode("12345").build();
+        Stock stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
+        Order savedOrder = Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING)
+                .totalPrice(2000L).shippingAddressId(5L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(shippingAddressRepository.findByUserIdAndIsDefaultTrue(1L)).willReturn(Optional.of(defaultAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
+        given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
+
+        saveOrderService.saveOrder(request, "testuser");
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        then(orderRepository).should().save(orderCaptor.capture());
+        assertThat(orderCaptor.getValue().getShippingAddressId()).isEqualTo(5L);
+    }
+
+    @Test
+    @DisplayName("saveOrder - shippingAddressId가 null이고 기본 배송지도 없으면 ShippingAddressNotFoundException을 던진다")
+    void saveOrder_throwsShippingAddressNotFoundException_whenNoDefaultAddress() {
+        SaveOrderRequest request = new SaveOrderRequest();
+        OrderItemRequest itemRequest = new OrderItemRequest();
+        ReflectionTestUtils.setField(itemRequest, "productId", 10L);
+        ReflectionTestUtils.setField(itemRequest, "quantity", 1);
+        ReflectionTestUtils.setField(request, "orderItems", List.of(itemRequest));
+        // shippingAddressId는 null
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(shippingAddressRepository.findByUserIdAndIsDefaultTrue(1L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> saveOrderService.saveOrder(request, "testuser"))
+                .isInstanceOf(ShippingAddressNotFoundException.class);
+    }
+
+    @Test
     @DisplayName("saveOrder - 최소 주문 금액 미달이면 OrderAmountNotEnoughException을 던진다")
     void saveOrder_throwsOrderAmountNotEnoughException_whenAmountBelowMinimum() {
         SaveOrderRequest request = buildRequestWithCoupon(10L, 1, 1L); // totalPrice = 2000

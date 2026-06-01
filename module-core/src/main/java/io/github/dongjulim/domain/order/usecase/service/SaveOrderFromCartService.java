@@ -24,6 +24,7 @@ import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.order.usecase.SaveOrderFromCartUseCase;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
+import io.github.dongjulim.domain.shippingAddress.entity.ShippingAddress;
 import io.github.dongjulim.domain.shippingAddress.repository.ShippingAddressRepository;
 import io.github.dongjulim.domain.stock.entity.Stock;
 import io.github.dongjulim.domain.stock.repository.StockRepository;
@@ -62,8 +63,7 @@ public class SaveOrderFromCartService implements SaveOrderFromCartUseCase {
             throw new CartEmptyException();
         }
 
-        shippingAddressRepository.findByIdAndUserId(request.getShippingAddressId(), user.getId())
-                .orElseThrow(ShippingAddressNotFoundException::new);
+        Long resolvedShippingAddressId = resolveShippingAddressId(request.getShippingAddressId(), user.getId());
 
         long totalPrice = 0L;
         for (CartItem cartItem : cartItems) {
@@ -78,7 +78,7 @@ public class SaveOrderFromCartService implements SaveOrderFromCartUseCase {
 
         Order order = orderRepository.save(Order.builder()
                 .userId(user.getId())
-                .shippingAddressId(request.getShippingAddressId())
+                .shippingAddressId(resolvedShippingAddressId)
                 .totalPrice(totalPrice)
                 .build());
 
@@ -97,6 +97,17 @@ public class SaveOrderFromCartService implements SaveOrderFromCartUseCase {
         }
 
         cart.clearItems();
+    }
+
+    private Long resolveShippingAddressId(Long requestedId, Long userId) {
+        if (requestedId != null) {
+            shippingAddressRepository.findByIdAndUserId(requestedId, userId)
+                    .orElseThrow(ShippingAddressNotFoundException::new);
+            return requestedId;
+        }
+        return shippingAddressRepository.findByUserIdAndIsDefaultTrue(userId)
+                .map(ShippingAddress::getId)
+                .orElseThrow(ShippingAddressNotFoundException::new);
     }
 
     private long applyCoupon(Long userCouponId, Long userId, long totalPrice) {

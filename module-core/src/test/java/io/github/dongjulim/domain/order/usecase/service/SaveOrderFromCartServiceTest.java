@@ -270,6 +270,48 @@ class SaveOrderFromCartServiceTest {
     }
 
     @Test
+    @DisplayName("saveOrderFromCart - shippingAddressId가 null이면 기본 배송지를 자동으로 사용한다")
+    void saveOrderFromCart_shouldUseDefaultShippingAddress_whenShippingAddressIdIsNull() {
+        Cart cart = Cart.builder().id(1L).userId(1L).build();
+        CartItem item = CartItem.builder().id(1L).cartId(1L).productId(10L).quantity(1).build();
+        ReflectionTestUtils.setField(cart, "cartItems", new java.util.ArrayList<>(List.of(item)));
+
+        ShippingAddress defaultAddress = ShippingAddress.builder().id(5L).userId(1L)
+                .recipientName("홍길동").phone("010-1234-5678").address("서울시 강남구").zipCode("12345").build();
+        Stock stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
+        Order savedOrder = Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING)
+                .totalPrice(2000L).shippingAddressId(5L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(shippingAddressRepository.findByUserIdAndIsDefaultTrue(1L)).willReturn(Optional.of(defaultAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
+        given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
+
+        saveOrderFromCartService.saveOrderFromCart(buildRequest(null, null), "testuser");
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        then(orderRepository).should().save(orderCaptor.capture());
+        assertThat(orderCaptor.getValue().getShippingAddressId()).isEqualTo(5L);
+    }
+
+    @Test
+    @DisplayName("saveOrderFromCart - shippingAddressId가 null이고 기본 배송지도 없으면 ShippingAddressNotFoundException을 던진다")
+    void saveOrderFromCart_throwsShippingAddressNotFoundException_whenNoDefaultAddress() {
+        Cart cart = Cart.builder().id(1L).userId(1L).build();
+        CartItem item = CartItem.builder().id(1L).cartId(1L).productId(10L).quantity(1).build();
+        ReflectionTestUtils.setField(cart, "cartItems", new java.util.ArrayList<>(List.of(item)));
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(shippingAddressRepository.findByUserIdAndIsDefaultTrue(1L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(buildRequest(null, null), "testuser"))
+                .isInstanceOf(ShippingAddressNotFoundException.class);
+    }
+
+    @Test
     @DisplayName("saveOrderFromCart - 존재하지 않는 쿠폰이면 CouponNotFoundException을 던진다")
     void saveOrderFromCart_throwsCouponNotFoundException_whenCouponNotFound() {
         Cart cart = Cart.builder().id(1L).userId(1L).build();
