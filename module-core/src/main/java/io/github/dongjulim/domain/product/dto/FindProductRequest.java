@@ -13,4 +13,5 @@ public class FindProductRequest {
     private String keyword;
     private Long minPrice;
     private Long maxPrice;
+    private Long sellerId;
 }

@@ -56,7 +56,7 @@ class FindProductServiceTest {
     void findProduct_shouldReturnProductsByKeyword() {
         FindProductRequest request = new FindProductRequest();
         request.setKeyword("사과");
-        given(productRepository.findAllBySearchCondition(null, "사과", null, null, pageable))
+        given(productRepository.findAllBySearchCondition(null, "사과", null, null, null, pageable))
                 .willReturn(new PageImpl<>(List.of(product), pageable, 1));
 
         Page<FindProductResponse> result = findProductService.findProduct(request, pageable);
@@ -70,7 +70,7 @@ class FindProductServiceTest {
     void findProduct_shouldReturnProductsByCategory() {
         FindProductRequest request = new FindProductRequest();
         request.setCategoryId(1L);
-        given(productRepository.findAllBySearchCondition(1L, null, null, null, pageable))
+        given(productRepository.findAllBySearchCondition(1L, null, null, null, null, pageable))
                 .willReturn(new PageImpl<>(List.of(product), pageable, 1));
 
         Page<FindProductResponse> result = findProductService.findProduct(request, pageable);
@@ -85,7 +85,7 @@ class FindProductServiceTest {
         FindProductRequest request = new FindProductRequest();
         request.setMinPrice(1000L);
         request.setMaxPrice(5000L);
-        given(productRepository.findAllBySearchCondition(null, null, 1000L, 5000L, pageable))
+        given(productRepository.findAllBySearchCondition(null, null, 1000L, 5000L, null, pageable))
                 .willReturn(new PageImpl<>(List.of(product), pageable, 1));
 
         Page<FindProductResponse> result = findProductService.findProduct(request, pageable);
@@ -95,10 +95,24 @@ class FindProductServiceTest {
     }
 
     @Test
+    @DisplayName("findProduct - 판매자 ID로 필터링하면 해당 판매자의 상품만 반환된다")
+    void findProduct_shouldReturnProductsBySellerId() {
+        FindProductRequest request = new FindProductRequest();
+        request.setSellerId(1L);
+        given(productRepository.findAllBySearchCondition(null, null, null, null, 1L, pageable))
+                .willReturn(new PageImpl<>(List.of(product), pageable, 1));
+
+        Page<FindProductResponse> result = findProductService.findProduct(request, pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getSellerName()).isEqualTo("판매자");
+    }
+
+    @Test
     @DisplayName("findProduct - 상품 목록에 평균 평점과 리뷰 수가 포함된다")
     void findProduct_shouldIncludeAverageRatingAndReviewCount() {
         FindProductRequest request = new FindProductRequest();
-        given(productRepository.findAllBySearchCondition(null, null, null, null, pageable))
+        given(productRepository.findAllBySearchCondition(null, null, null, null, null, pageable))
                 .willReturn(new PageImpl<>(List.of(product), pageable, 1));
         given(reviewRepository.findAverageRatingByProductId(1L)).willReturn(3.5);
         given(reviewRepository.countByProductIdAndDeleteCheckFalse(1L)).willReturn(5L);
@@ -114,7 +128,7 @@ class FindProductServiceTest {
     void findProduct_shouldReturnEmptyPage_whenNoMatch() {
         FindProductRequest request = new FindProductRequest();
         request.setKeyword("없는상품");
-        given(productRepository.findAllBySearchCondition(null, "없는상품", null, null, pageable))
+        given(productRepository.findAllBySearchCondition(null, "없는상품", null, null, null, pageable))
                 .willReturn(Page.empty(pageable));
 
         Page<FindProductResponse> result = findProductService.findProduct(request, pageable);

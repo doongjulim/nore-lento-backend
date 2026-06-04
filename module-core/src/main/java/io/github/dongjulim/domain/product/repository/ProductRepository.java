@@ -17,12 +17,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             " AND (:categoryId IS NULL OR p.categoryId = :categoryId)" +
             " AND (:keyword IS NULL OR p.name LIKE %:keyword%)" +
             " AND (:minPrice IS NULL OR p.price >= :minPrice)" +
-            " AND (:maxPrice IS NULL OR p.price <= :maxPrice)")
+            " AND (:maxPrice IS NULL OR p.price <= :maxPrice)" +
+            " AND (:sellerId IS NULL OR p.userId = :sellerId)")
     Page<Product> findAllBySearchCondition(
             @Param("categoryId") Long categoryId,
             @Param("keyword") String keyword,
             @Param("minPrice") Long minPrice,
             @Param("maxPrice") Long maxPrice,
+            @Param("sellerId") Long sellerId,
             Pageable pageable
     );
 }

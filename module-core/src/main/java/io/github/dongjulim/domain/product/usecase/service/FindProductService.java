@@ -28,6 +28,7 @@ public class FindProductService implements FindProductUseCase {
                         request.getKeyword(),
                         request.getMinPrice(),
                         request.getMaxPrice(),
+                        request.getSellerId(),
                         pageable)
                 .map(product -> {
                     double averageRating = Optional.ofNullable(
