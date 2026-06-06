@@ -1,6 +1,7 @@
 package io.github.dongjulim.domain.order.usecase.service;
 
 import io.github.dongjulim.domain.order.dto.FindOrderResponse;
+import io.github.dongjulim.domain.order.enums.OrderStatus;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.order.usecase.FindOrdersUseCase;
 import io.github.dongjulim.domain.user.component.UserLoader;
@@ -21,10 +22,14 @@ public class FindOrdersService implements FindOrdersUseCase {
     private final UserLoader userLoader;
 
     @Override
-    public List<FindOrderResponse> findOrders(String username) {
+    public List<FindOrderResponse> findOrders(String username, OrderStatus status) {
         User user = userLoader.load(username);
 
-        return orderRepository.findAllByUserId(user.getId()).stream()
+        List<io.github.dongjulim.domain.order.entity.Order> orders = status != null
+                ? orderRepository.findAllByUserIdAndStatus(user.getId(), status)
+                : orderRepository.findAllByUserId(user.getId());
+
+        return orders.stream()
                 .map(FindOrderResponse::from)
                 .collect(Collectors.toList());
     }
