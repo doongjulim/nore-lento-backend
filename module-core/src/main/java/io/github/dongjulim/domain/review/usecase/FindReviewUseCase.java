@@ -5,5 +5,5 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface FindReviewUseCase {
-    Page<FindReviewResponse> findReviews(Long productId, Pageable pageable);
+    Page<FindReviewResponse> findReviews(Long productId, Integer rating, Pageable pageable);
 }

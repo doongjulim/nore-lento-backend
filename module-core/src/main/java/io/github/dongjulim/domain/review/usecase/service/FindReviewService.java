@@ -17,8 +17,8 @@ public class FindReviewService implements FindReviewUseCase {
     private final ReviewRepository reviewRepository;
 
     @Override
-    public Page<FindReviewResponse> findReviews(Long productId, Pageable pageable) {
-        return reviewRepository.findAllByProductId(productId, pageable)
+    public Page<FindReviewResponse> findReviews(Long productId, Integer rating, Pageable pageable) {
+        return reviewRepository.findAllByProductId(productId, rating, pageable)
                 .map(FindReviewResponse::from);
     }
 }

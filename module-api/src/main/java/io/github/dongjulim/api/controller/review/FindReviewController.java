@@ -21,8 +21,9 @@ public class FindReviewController {
     @GetMapping("/api/v2/reviews")
     public ResponseEntity<Page<FindReviewResponse>> findReviews(
             @RequestParam Long productId,
+            @RequestParam(required = false) Integer rating,
             @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return ResponseEntity.ok(findReviewUseCase.findReviews(productId, pageable));
+        return ResponseEntity.ok(findReviewUseCase.findReviews(productId, rating, pageable));
     }
 }

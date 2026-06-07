@@ -39,16 +39,16 @@ class FindReviewServiceTest {
     }
 
     @Test
-    @DisplayName("findReviews - 상품의 리뷰 목록을 페이징하여 반환한다")
+    @DisplayName("findReviews - rating이 null이면 상품의 전체 리뷰 목록을 페이징하여 반환한다")
     void findReviews_shouldReturnPagedReviews() {
         Review review1 = createReview(1L, 1L, "user1", "맛있어요", 5);
         Review review2 = createReview(2L, 2L, "user2", "보통이에요", 3);
         Pageable pageable = PageRequest.of(0, 10);
         Page<Review> reviewPage = new PageImpl<>(List.of(review1, review2), pageable, 2);
 
-        given(reviewRepository.findAllByProductId(10L, pageable)).willReturn(reviewPage);
+        given(reviewRepository.findAllByProductId(10L, null, pageable)).willReturn(reviewPage);
 
-        Page<FindReviewResponse> result = findReviewService.findReviews(10L, pageable);
+        Page<FindReviewResponse> result = findReviewService.findReviews(10L, null, pageable);
 
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getContent().get(0).getContent()).isEqualTo("맛있어요");
@@ -59,12 +59,27 @@ class FindReviewServiceTest {
     }
 
     @Test
+    @DisplayName("findReviews - rating을 지정하면 해당 평점의 리뷰만 반환한다")
+    void findReviews_shouldReturnFilteredReviews_whenRatingIsGiven() {
+        Review review = createReview(1L, 1L, "user1", "맛있어요", 5);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Review> reviewPage = new PageImpl<>(List.of(review), pageable, 1);
+
+        given(reviewRepository.findAllByProductId(10L, 5, pageable)).willReturn(reviewPage);
+
+        Page<FindReviewResponse> result = findReviewService.findReviews(10L, 5, pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getRating()).isEqualTo(5);
+    }
+
+    @Test
     @DisplayName("findReviews - 리뷰가 없으면 빈 페이지를 반환한다")
     void findReviews_shouldReturnEmptyPage_whenNoReviews() {
         Pageable pageable = PageRequest.of(0, 10);
-        given(reviewRepository.findAllByProductId(10L, pageable)).willReturn(Page.empty(pageable));
+        given(reviewRepository.findAllByProductId(10L, null, pageable)).willReturn(Page.empty(pageable));
 
-        Page<FindReviewResponse> result = findReviewService.findReviews(10L, pageable);
+        Page<FindReviewResponse> result = findReviewService.findReviews(10L, null, pageable);
 
         assertThat(result.getContent()).isEmpty();
     }
