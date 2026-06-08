@@ -15,6 +15,8 @@ public class SaveOrderRequest {
 
     private Long userCouponId;
 
+    private Long usePoints;
+
     @Valid
     @NotEmpty
     private List<OrderItemRequest> orderItems;

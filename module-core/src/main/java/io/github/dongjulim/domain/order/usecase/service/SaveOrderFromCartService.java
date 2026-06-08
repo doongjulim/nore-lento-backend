@@ -22,6 +22,8 @@ import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.order.usecase.SaveOrderFromCartUseCase;
+import io.github.dongjulim.domain.point.entity.UserPoint;
+import io.github.dongjulim.domain.point.repository.UserPointRepository;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
 import io.github.dongjulim.domain.shippingAddress.entity.ShippingAddress;
@@ -50,6 +52,7 @@ public class SaveOrderFromCartService implements SaveOrderFromCartUseCase {
     private final UserCouponRepository userCouponRepository;
     private final CouponRepository couponRepository;
     private final UserLoader userLoader;
+    private final UserPointRepository userPointRepository;
 
     @Override
     public void saveOrderFromCart(SaveOrderFromCartRequest request, String username) {
@@ -74,6 +77,10 @@ public class SaveOrderFromCartService implements SaveOrderFromCartUseCase {
 
         if (request.getUserCouponId() != null) {
             totalPrice = applyCoupon(request.getUserCouponId(), user.getId(), totalPrice);
+        }
+
+        if (request.getUsePoints() != null && request.getUsePoints() > 0) {
+            totalPrice = applyPoints(request.getUsePoints(), user.getId(), totalPrice);
         }
 
         Order order = orderRepository.save(Order.builder()
@@ -122,5 +129,12 @@ public class SaveOrderFromCartService implements SaveOrderFromCartUseCase {
 
         userCoupon.use();
         return coupon.applyDiscount(totalPrice);
+    }
+
+    private long applyPoints(Long usePoints, Long userId, long totalPrice) {
+        UserPoint userPoint = userPointRepository.findByUserId(userId)
+                .orElseThrow(() -> new io.github.dongjulim.domain.common.exception.InsufficientPointException());
+        userPoint.use(usePoints);
+        return totalPrice - usePoints;
     }
 }

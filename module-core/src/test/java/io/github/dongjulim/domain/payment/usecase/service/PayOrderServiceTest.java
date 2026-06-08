@@ -10,6 +10,7 @@ import io.github.dongjulim.domain.payment.entity.Payment;
 import io.github.dongjulim.domain.payment.enums.PaymentMethod;
 import io.github.dongjulim.domain.payment.enums.PaymentStatus;
 import io.github.dongjulim.domain.payment.repository.PaymentRepository;
+import io.github.dongjulim.domain.point.usecase.EarnPointUseCase;
 import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +41,9 @@ class PayOrderServiceTest {
 
     @Mock
     private UserLoader userLoader;
+
+    @Mock
+    private EarnPointUseCase earnPointUseCase;
 
     @InjectMocks
     private PayOrderService payOrderService;
@@ -75,6 +79,23 @@ class PayOrderServiceTest {
         assertThat(saved.getMethod()).isEqualTo(PaymentMethod.CARD);
         assertThat(saved.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
         assertThat(saved.getAmount()).isEqualTo(5000L);
+    }
+
+    @Test
+    @DisplayName("payOrder - 결제 완료 시 주문 총액의 1%가 포인트로 적립된다")
+    void payOrder_shouldEarnPoint_afterPaymentCompleted() {
+        Order order = Order.builder().id(10L).userId(1L).status(OrderStatus.PENDING).totalPrice(10000L).build();
+
+        PayOrderRequest request = new PayOrderRequest();
+        ReflectionTestUtils.setField(request, "orderId", 10L);
+        ReflectionTestUtils.setField(request, "method", PaymentMethod.CARD);
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(orderRepository.findByIdAndUserId(10L, 1L)).willReturn(Optional.of(order));
+
+        payOrderService.payOrder(request, "testuser");
+
+        then(earnPointUseCase).should().earnPoint(1L, 10000L);
     }
 
     @Test

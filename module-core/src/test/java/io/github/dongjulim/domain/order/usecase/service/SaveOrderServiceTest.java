@@ -3,6 +3,7 @@ package io.github.dongjulim.domain.order.usecase.service;
 import io.github.dongjulim.domain.common.exception.CouponAlreadyUsedException;
 import io.github.dongjulim.domain.common.exception.CouponExpiredException;
 import io.github.dongjulim.domain.common.exception.CouponNotFoundException;
+import io.github.dongjulim.domain.common.exception.InsufficientPointException;
 import io.github.dongjulim.domain.common.exception.OrderAmountNotEnoughException;
 import io.github.dongjulim.domain.common.exception.OutOfStockException;
 import io.github.dongjulim.domain.common.exception.ProductNotFoundException;
@@ -20,6 +21,8 @@ import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.enums.OrderStatus;
 import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
+import io.github.dongjulim.domain.point.entity.UserPoint;
+import io.github.dongjulim.domain.point.repository.UserPointRepository;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
 import io.github.dongjulim.domain.shippingAddress.entity.ShippingAddress;
@@ -74,6 +77,9 @@ class SaveOrderServiceTest {
 
     @Mock
     private UserLoader userLoader;
+
+    @Mock
+    private UserPointRepository userPointRepository;
 
     @InjectMocks
     private SaveOrderService saveOrderService;
@@ -377,5 +383,45 @@ class SaveOrderServiceTest {
 
         assertThatThrownBy(() -> saveOrderService.saveOrder(request, "testuser"))
                 .isInstanceOf(OrderAmountNotEnoughException.class);
+    }
+
+    @Test
+    @DisplayName("saveOrder - 포인트 사용 시 총액에서 사용 포인트가 차감된다")
+    void saveOrder_shouldDeductPoints_whenUsePointsIsProvided() {
+        SaveOrderRequest request = buildRequest(10L, 3); // totalPrice = 6000
+        ReflectionTestUtils.setField(request, "usePoints", 1000L);
+        UserPoint userPoint = UserPoint.builder().userId(1L).balance(2000L).build();
+        Stock stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
+        Order savedOrder = Order.builder().id(100L).userId(1L).totalPrice(5000L).shippingAddressId(1L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
+        given(userPointRepository.findByUserId(1L)).willReturn(Optional.of(userPoint));
+        given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
+
+        saveOrderService.saveOrder(request, "testuser");
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        then(orderRepository).should().save(orderCaptor.capture());
+        assertThat(orderCaptor.getValue().getTotalPrice()).isEqualTo(5000L); // 6000 - 1000
+        assertThat(userPoint.getBalance()).isEqualTo(1000L); // 2000 - 1000
+    }
+
+    @Test
+    @DisplayName("saveOrder - 포인트 잔액이 부족하면 InsufficientPointException을 던진다")
+    void saveOrder_throwsInsufficientPointException_whenPointsNotEnough() {
+        SaveOrderRequest request = buildRequest(10L, 1); // totalPrice = 2000
+        ReflectionTestUtils.setField(request, "usePoints", 5000L);
+        UserPoint userPoint = UserPoint.builder().userId(1L).balance(1000L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(userPointRepository.findByUserId(1L)).willReturn(Optional.of(userPoint));
+
+        assertThatThrownBy(() -> saveOrderService.saveOrder(request, "testuser"))
+                .isInstanceOf(InsufficientPointException.class);
     }
 }

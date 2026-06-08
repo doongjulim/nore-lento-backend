@@ -8,6 +8,7 @@ import io.github.dongjulim.domain.payment.entity.Payment;
 import io.github.dongjulim.domain.payment.enums.PaymentStatus;
 import io.github.dongjulim.domain.payment.repository.PaymentRepository;
 import io.github.dongjulim.domain.payment.usecase.PayOrderUseCase;
+import io.github.dongjulim.domain.point.usecase.EarnPointUseCase;
 import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class PayOrderService implements PayOrderUseCase {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final UserLoader userLoader;
+    private final EarnPointUseCase earnPointUseCase;
 
     @Override
     public void payOrder(PayOrderRequest request, String username) {
@@ -39,5 +41,7 @@ public class PayOrderService implements PayOrderUseCase {
                 .status(PaymentStatus.COMPLETED)
                 .amount(order.getTotalPrice())
                 .build());
+
+        earnPointUseCase.earnPoint(user.getId(), order.getTotalPrice());
     }
 }

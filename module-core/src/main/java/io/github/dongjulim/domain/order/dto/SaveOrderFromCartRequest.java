@@ -10,4 +10,6 @@ public class SaveOrderFromCartRequest {
     private Long shippingAddressId;
 
     private Long userCouponId;
+
+    private Long usePoints;
 }

@@ -6,6 +6,7 @@ import io.github.dongjulim.domain.cart.repository.CartRepository;
 import io.github.dongjulim.domain.common.exception.CartEmptyException;
 import io.github.dongjulim.domain.common.exception.CartNotFoundException;
 import io.github.dongjulim.domain.common.exception.CouponNotFoundException;
+import io.github.dongjulim.domain.common.exception.InsufficientPointException;
 import io.github.dongjulim.domain.common.exception.OutOfStockException;
 import io.github.dongjulim.domain.common.exception.ShippingAddressNotFoundException;
 import io.github.dongjulim.domain.coupon.entity.Coupon;
@@ -19,6 +20,8 @@ import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.enums.OrderStatus;
 import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
+import io.github.dongjulim.domain.point.entity.UserPoint;
+import io.github.dongjulim.domain.point.repository.UserPointRepository;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
 import io.github.dongjulim.domain.shippingAddress.entity.ShippingAddress;
@@ -75,6 +78,9 @@ class SaveOrderFromCartServiceTest {
 
     @Mock
     private UserLoader userLoader;
+
+    @Mock
+    private UserPointRepository userPointRepository;
 
     @InjectMocks
     private SaveOrderFromCartService saveOrderFromCartService;
@@ -326,5 +332,57 @@ class SaveOrderFromCartServiceTest {
 
         assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(buildRequest(1L, 99L), "testuser"))
                 .isInstanceOf(CouponNotFoundException.class);
+    }
+
+    private SaveOrderFromCartRequest buildRequestWithPoints(Long shippingAddressId, Long usePoints) {
+        SaveOrderFromCartRequest request = buildRequest(shippingAddressId, null);
+        ReflectionTestUtils.setField(request, "usePoints", usePoints);
+        return request;
+    }
+
+    @Test
+    @DisplayName("saveOrderFromCart - 포인트 사용 시 총액에서 사용 포인트가 차감된다")
+    void saveOrderFromCart_shouldDeductPoints_whenUsePointsIsProvided() {
+        Cart cart = Cart.builder().id(1L).userId(1L).build();
+        CartItem item = CartItem.builder().id(1L).cartId(1L).productId(10L).quantity(3).build();
+        ReflectionTestUtils.setField(cart, "cartItems", new java.util.ArrayList<>(List.of(item)));
+
+        UserPoint userPoint = UserPoint.builder().userId(1L).balance(2000L).build();
+        Stock stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
+        Order savedOrder = Order.builder().id(100L).userId(1L).totalPrice(5000L).shippingAddressId(1L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
+        given(userPointRepository.findByUserId(1L)).willReturn(Optional.of(userPoint));
+        given(orderRepository.save(any(Order.class))).willReturn(savedOrder);
+
+        saveOrderFromCartService.saveOrderFromCart(buildRequestWithPoints(1L, 1000L), "testuser");
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        then(orderRepository).should().save(orderCaptor.capture());
+        assertThat(orderCaptor.getValue().getTotalPrice()).isEqualTo(5000L); // 6000 - 1000
+        assertThat(userPoint.getBalance()).isEqualTo(1000L); // 2000 - 1000
+    }
+
+    @Test
+    @DisplayName("saveOrderFromCart - 포인트 잔액이 부족하면 InsufficientPointException을 던진다")
+    void saveOrderFromCart_throwsInsufficientPointException_whenPointsNotEnough() {
+        Cart cart = Cart.builder().id(1L).userId(1L).build();
+        CartItem item = CartItem.builder().id(1L).cartId(1L).productId(10L).quantity(1).build();
+        ReflectionTestUtils.setField(cart, "cartItems", new java.util.ArrayList<>(List.of(item)));
+
+        UserPoint userPoint = UserPoint.builder().userId(1L).balance(500L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(shippingAddressRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(shippingAddress));
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
+        given(userPointRepository.findByUserId(1L)).willReturn(Optional.of(userPoint));
+
+        assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(buildRequestWithPoints(1L, 3000L), "testuser"))
+                .isInstanceOf(InsufficientPointException.class);
     }
 }

@@ -37,7 +37,8 @@ public enum ErrorCode {
     COUPON_ALREADY_USED("coupon-already-used", "Coupon Already Used"),
     COUPON_EXPIRED("coupon-expired", "Coupon Expired"),
     ORDER_AMOUNT_NOT_ENOUGH("order-amount-not-enough", "Order Amount Not Enough"),
-    REVIEW_NOT_ELIGIBLE("review-not-eligible", "Review Not Eligible");
+    REVIEW_NOT_ELIGIBLE("review-not-eligible", "Review Not Eligible"),
+    INSUFFICIENT_POINT("insufficient-point", "Insufficient Point");
 
     private final String code;
     private final String title;
