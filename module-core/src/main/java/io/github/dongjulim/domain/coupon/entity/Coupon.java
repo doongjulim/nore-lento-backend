@@ -72,4 +72,11 @@ public class Coupon extends BaseEntity {
         }
         return totalPrice * (100 - discountValue) / 100;
     }
+
+    public void update(String name, Long discountValue, Long minOrderAmount, LocalDateTime expiresAt) {
+        if (name != null) this.name = name;
+        if (discountValue != null) this.discountValue = discountValue;
+        if (minOrderAmount != null) this.minOrderAmount = minOrderAmount;
+        if (expiresAt != null) this.expiresAt = expiresAt;
+    }
 }
