@@ -21,6 +21,7 @@ import io.github.dongjulim.domain.order.enums.OrderStatus;
 import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.point.entity.UserPoint;
+import io.github.dongjulim.domain.point.repository.PointHistoryRepository;
 import io.github.dongjulim.domain.point.repository.UserPointRepository;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
@@ -81,6 +82,9 @@ class SaveOrderFromCartServiceTest {
 
     @Mock
     private UserPointRepository userPointRepository;
+
+    @Mock
+    private PointHistoryRepository pointHistoryRepository;
 
     @InjectMocks
     private SaveOrderFromCartService saveOrderFromCartService;

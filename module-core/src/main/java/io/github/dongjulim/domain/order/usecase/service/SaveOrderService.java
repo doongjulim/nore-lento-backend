@@ -18,7 +18,10 @@ import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.order.usecase.SaveOrderUseCase;
+import io.github.dongjulim.domain.point.entity.PointHistory;
 import io.github.dongjulim.domain.point.entity.UserPoint;
+import io.github.dongjulim.domain.point.enums.PointHistoryType;
+import io.github.dongjulim.domain.point.repository.PointHistoryRepository;
 import io.github.dongjulim.domain.point.repository.UserPointRepository;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
@@ -46,6 +49,7 @@ public class SaveOrderService implements SaveOrderUseCase {
     private final CouponRepository couponRepository;
     private final UserLoader userLoader;
     private final UserPointRepository userPointRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
     @Override
     public void saveOrder(SaveOrderRequest request, String username) {
@@ -118,6 +122,11 @@ public class SaveOrderService implements SaveOrderUseCase {
         UserPoint userPoint = userPointRepository.findByUserId(userId)
                 .orElseThrow(() -> new io.github.dongjulim.domain.common.exception.InsufficientPointException());
         userPoint.use(usePoints);
+        pointHistoryRepository.save(PointHistory.builder()
+                .userId(userId)
+                .amount(usePoints)
+                .type(PointHistoryType.USE)
+                .build());
         return totalPrice - usePoints;
     }
 }
