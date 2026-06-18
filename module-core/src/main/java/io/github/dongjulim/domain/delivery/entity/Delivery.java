@@ -1,6 +1,7 @@
 package io.github.dongjulim.domain.delivery.entity;
 
 import io.github.dongjulim.domain.common.entity.BaseEntity;
+import io.github.dongjulim.domain.common.exception.DeliveryAddressNotChangeableException;
 import io.github.dongjulim.domain.common.exception.DeliveryNotReturnableException;
 import io.github.dongjulim.domain.common.exception.DeliveryStatusNotAdvancableException;
 import io.github.dongjulim.domain.delivery.enums.DeliveryStatus;
@@ -63,6 +64,13 @@ public class Delivery extends BaseEntity {
         } else {
             throw new DeliveryStatusNotAdvancableException();
         }
+    }
+
+    public void changeAddress(String newAddress) {
+        if (this.status != DeliveryStatus.PREPARING) {
+            throw new DeliveryAddressNotChangeableException();
+        }
+        this.address = newAddress;
     }
 
     public void returnDelivery() {

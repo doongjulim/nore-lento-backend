@@ -28,6 +28,7 @@ public enum ErrorCode {
     DELIVERY_NOT_FOUND("delivery-not-found", "Delivery Not Found"),
     DELIVERY_STATUS_NOT_ADVANCABLE("delivery-status-not-advancable", "Delivery Status Not Advancable"),
     DELIVERY_NOT_RETURNABLE("delivery-not-returnable", "Delivery Not Returnable"),
+    DELIVERY_ADDRESS_NOT_CHANGEABLE("delivery-address-not-changeable", "Delivery Address Not Changeable"),
     OUT_OF_STOCK("out-of-stock", "Out Of Stock"),
     STOCK_NOT_FOUND("stock-not-found", "Stock Not Found"),
     SHIPPING_ADDRESS_NOT_FOUND("shipping-address-not-found", "Shipping Address Not Found"),
