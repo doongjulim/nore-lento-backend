@@ -1,16 +1,8 @@
 package io.github.dongjulim.domain.order.usecase.service;
 
-import io.github.dongjulim.domain.common.exception.CouponAlreadyUsedException;
-import io.github.dongjulim.domain.common.exception.CouponExpiredException;
-import io.github.dongjulim.domain.common.exception.CouponNotFoundException;
-import io.github.dongjulim.domain.common.exception.OrderAmountNotEnoughException;
 import io.github.dongjulim.domain.common.exception.ProductNotFoundException;
-import io.github.dongjulim.domain.common.exception.ShippingAddressNotFoundException;
 import io.github.dongjulim.domain.common.exception.StockNotFoundException;
-import io.github.dongjulim.domain.coupon.entity.Coupon;
-import io.github.dongjulim.domain.coupon.entity.UserCoupon;
-import io.github.dongjulim.domain.coupon.repository.CouponRepository;
-import io.github.dongjulim.domain.coupon.repository.UserCouponRepository;
+import io.github.dongjulim.domain.order.component.OrderCreationHelper;
 import io.github.dongjulim.domain.order.dto.OrderItemRequest;
 import io.github.dongjulim.domain.order.dto.SaveOrderRequest;
 import io.github.dongjulim.domain.order.entity.Order;
@@ -18,15 +10,8 @@ import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.order.usecase.SaveOrderUseCase;
-import io.github.dongjulim.domain.point.entity.PointHistory;
-import io.github.dongjulim.domain.point.entity.UserPoint;
-import io.github.dongjulim.domain.point.enums.PointHistoryType;
-import io.github.dongjulim.domain.point.repository.PointHistoryRepository;
-import io.github.dongjulim.domain.point.repository.UserPointRepository;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
-import io.github.dongjulim.domain.shippingAddress.entity.ShippingAddress;
-import io.github.dongjulim.domain.shippingAddress.repository.ShippingAddressRepository;
 import io.github.dongjulim.domain.stock.entity.Stock;
 import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
@@ -44,18 +29,14 @@ public class SaveOrderService implements SaveOrderUseCase {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final StockRepository stockRepository;
-    private final ShippingAddressRepository shippingAddressRepository;
-    private final UserCouponRepository userCouponRepository;
-    private final CouponRepository couponRepository;
     private final UserLoader userLoader;
-    private final UserPointRepository userPointRepository;
-    private final PointHistoryRepository pointHistoryRepository;
+    private final OrderCreationHelper orderCreationHelper;
 
     @Override
     public void saveOrder(SaveOrderRequest request, String username) {
         User user = userLoader.load(username);
 
-        Long resolvedShippingAddressId = resolveShippingAddressId(request.getShippingAddressId(), user.getId());
+        Long resolvedShippingAddressId = orderCreationHelper.resolveShippingAddressId(request.getShippingAddressId(), user.getId());
 
         long totalPrice = 0L;
         for (OrderItemRequest item : request.getOrderItems()) {
@@ -65,11 +46,11 @@ public class SaveOrderService implements SaveOrderUseCase {
         }
 
         if (request.getUserCouponId() != null) {
-            totalPrice = applyCoupon(request.getUserCouponId(), user.getId(), totalPrice);
+            totalPrice = orderCreationHelper.applyCoupon(request.getUserCouponId(), user.getId(), totalPrice);
         }
 
         if (request.getUsePoints() != null && request.getUsePoints() > 0) {
-            totalPrice = applyPoints(request.getUsePoints(), user.getId(), totalPrice);
+            totalPrice = orderCreationHelper.applyPoints(request.getUsePoints(), user.getId(), totalPrice);
         }
 
         Order order = orderRepository.save(Order.builder()
@@ -91,42 +72,5 @@ public class SaveOrderService implements SaveOrderUseCase {
                     .price(product.getPrice())
                     .build());
         }
-    }
-
-    private Long resolveShippingAddressId(Long requestedId, Long userId) {
-        if (requestedId != null) {
-            shippingAddressRepository.findByIdAndUserId(requestedId, userId)
-                    .orElseThrow(ShippingAddressNotFoundException::new);
-            return requestedId;
-        }
-        return shippingAddressRepository.findByUserIdAndIsDefaultTrue(userId)
-                .map(ShippingAddress::getId)
-                .orElseThrow(ShippingAddressNotFoundException::new);
-    }
-
-    private long applyCoupon(Long userCouponId, Long userId, long totalPrice) {
-        UserCoupon userCoupon = userCouponRepository.findByIdAndUserId(userCouponId, userId)
-                .orElseThrow(CouponNotFoundException::new);
-        if (userCoupon.getIsUsed()) throw new CouponAlreadyUsedException();
-
-        Coupon coupon = couponRepository.findById(userCoupon.getCouponId())
-                .orElseThrow(CouponNotFoundException::new);
-        if (coupon.isExpired()) throw new CouponExpiredException();
-        if (!coupon.isApplicable(totalPrice)) throw new OrderAmountNotEnoughException();
-
-        userCoupon.use();
-        return coupon.applyDiscount(totalPrice);
-    }
-
-    private long applyPoints(Long usePoints, Long userId, long totalPrice) {
-        UserPoint userPoint = userPointRepository.findByUserId(userId)
-                .orElseThrow(() -> new io.github.dongjulim.domain.common.exception.InsufficientPointException());
-        userPoint.use(usePoints);
-        pointHistoryRepository.save(PointHistory.builder()
-                .userId(userId)
-                .amount(usePoints)
-                .type(PointHistoryType.USE)
-                .build());
-        return totalPrice - usePoints;
     }
 }
