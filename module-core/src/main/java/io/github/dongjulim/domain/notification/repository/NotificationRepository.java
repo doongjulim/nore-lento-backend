@@ -15,4 +15,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     Page<Notification> findAllByUserIdAndDeleteCheckFalse(Long userId, Pageable pageable);
 
     List<Notification> findAllByUserIdAndDeleteCheckFalseAndIsReadFalse(Long userId);
+
+    Page<Notification> findAllByUserIdAndDeleteCheckFalseAndIsReadFalse(Long userId, Pageable pageable);
 }
