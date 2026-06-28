@@ -6,6 +6,7 @@ import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.order.usecase.CancelOrderUseCase;
+import io.github.dongjulim.domain.point.usecase.RefundPointUseCase;
 import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
@@ -24,6 +25,7 @@ public class CancelOrderService implements CancelOrderUseCase {
     private final OrderItemRepository orderItemRepository;
     private final StockRepository stockRepository;
     private final UserLoader userLoader;
+    private final RefundPointUseCase refundPointUseCase;
 
     @Override
     public void cancelOrder(Long orderId, String username) {
@@ -38,6 +40,10 @@ public class CancelOrderService implements CancelOrderUseCase {
         for (OrderItem item : items) {
             stockRepository.findByProductId(item.getProductId())
                     .ifPresent(stock -> stock.increase(item.getQuantity()));
+        }
+
+        if (order.getUsedPoints() != null && order.getUsedPoints() > 0) {
+            refundPointUseCase.refundPoint(user.getId(), order.getUsedPoints());
         }
     }
 }

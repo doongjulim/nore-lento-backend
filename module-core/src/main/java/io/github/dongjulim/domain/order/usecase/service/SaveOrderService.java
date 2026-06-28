@@ -57,6 +57,7 @@ public class SaveOrderService implements SaveOrderUseCase {
                 .userId(user.getId())
                 .shippingAddressId(resolvedShippingAddressId)
                 .totalPrice(totalPrice)
+                .usedPoints(request.getUsePoints())
                 .build());
 
         for (OrderItemRequest item : request.getOrderItems()) {

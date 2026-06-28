@@ -3,18 +3,13 @@ package io.github.dongjulim.domain.order.component;
 import io.github.dongjulim.domain.common.exception.CouponAlreadyUsedException;
 import io.github.dongjulim.domain.common.exception.CouponExpiredException;
 import io.github.dongjulim.domain.common.exception.CouponNotFoundException;
-import io.github.dongjulim.domain.common.exception.InsufficientPointException;
 import io.github.dongjulim.domain.common.exception.OrderAmountNotEnoughException;
 import io.github.dongjulim.domain.common.exception.ShippingAddressNotFoundException;
 import io.github.dongjulim.domain.coupon.entity.Coupon;
 import io.github.dongjulim.domain.coupon.entity.UserCoupon;
 import io.github.dongjulim.domain.coupon.repository.CouponRepository;
 import io.github.dongjulim.domain.coupon.repository.UserCouponRepository;
-import io.github.dongjulim.domain.point.entity.PointHistory;
-import io.github.dongjulim.domain.point.entity.UserPoint;
-import io.github.dongjulim.domain.point.enums.PointHistoryType;
-import io.github.dongjulim.domain.point.repository.PointHistoryRepository;
-import io.github.dongjulim.domain.point.repository.UserPointRepository;
+import io.github.dongjulim.domain.point.usecase.UsePointUseCase;
 import io.github.dongjulim.domain.shippingAddress.entity.ShippingAddress;
 import io.github.dongjulim.domain.shippingAddress.repository.ShippingAddressRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +22,7 @@ public class OrderCreationHelper {
     private final ShippingAddressRepository shippingAddressRepository;
     private final UserCouponRepository userCouponRepository;
     private final CouponRepository couponRepository;
-    private final UserPointRepository userPointRepository;
-    private final PointHistoryRepository pointHistoryRepository;
+    private final UsePointUseCase usePointUseCase;
 
     public Long resolveShippingAddressId(Long requestedId, Long userId) {
         if (requestedId != null) {
@@ -56,14 +50,7 @@ public class OrderCreationHelper {
     }
 
     public long applyPoints(Long usePoints, Long userId, long totalPrice) {
-        UserPoint userPoint = userPointRepository.findByUserId(userId)
-                .orElseThrow(InsufficientPointException::new);
-        userPoint.use(usePoints);
-        pointHistoryRepository.save(PointHistory.builder()
-                .userId(userId)
-                .amount(usePoints)
-                .type(PointHistoryType.USE)
-                .build());
+        usePointUseCase.usePoint(userId, usePoints);
         return totalPrice - usePoints;
     }
 }

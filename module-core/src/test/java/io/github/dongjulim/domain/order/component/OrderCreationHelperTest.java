@@ -11,9 +11,7 @@ import io.github.dongjulim.domain.coupon.entity.UserCoupon;
 import io.github.dongjulim.domain.coupon.enums.DiscountType;
 import io.github.dongjulim.domain.coupon.repository.CouponRepository;
 import io.github.dongjulim.domain.coupon.repository.UserCouponRepository;
-import io.github.dongjulim.domain.point.entity.UserPoint;
-import io.github.dongjulim.domain.point.repository.PointHistoryRepository;
-import io.github.dongjulim.domain.point.repository.UserPointRepository;
+import io.github.dongjulim.domain.point.usecase.UsePointUseCase;
 import io.github.dongjulim.domain.shippingAddress.entity.ShippingAddress;
 import io.github.dongjulim.domain.shippingAddress.repository.ShippingAddressRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -28,9 +26,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
 class OrderCreationHelperTest {
@@ -45,10 +43,7 @@ class OrderCreationHelperTest {
     private CouponRepository couponRepository;
 
     @Mock
-    private UserPointRepository userPointRepository;
-
-    @Mock
-    private PointHistoryRepository pointHistoryRepository;
+    private UsePointUseCase usePointUseCase;
 
     @InjectMocks
     private OrderCreationHelper orderCreationHelper;
@@ -181,25 +176,18 @@ class OrderCreationHelperTest {
     // ── applyPoints ───────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("applyPoints - 포인트 사용 시 차감된 총액을 반환하고 이력이 저장된다")
-    void applyPoints_shouldDeductPointsAndSaveHistory() {
-        UserPoint userPoint = UserPoint.builder().userId(1L).balance(2000L).build();
-
-        given(userPointRepository.findByUserId(1L)).willReturn(Optional.of(userPoint));
-
+    @DisplayName("applyPoints - 포인트 사용 시 차감된 총액을 반환한다")
+    void applyPoints_shouldReturnDiscountedTotal() {
         long result = orderCreationHelper.applyPoints(1000L, 1L, 6000L);
 
         assertThat(result).isEqualTo(5000L);
-        assertThat(userPoint.getBalance()).isEqualTo(1000L);
-        then(pointHistoryRepository).should().save(any());
+        then(usePointUseCase).should().usePoint(1L, 1000L);
     }
 
     @Test
     @DisplayName("applyPoints - 포인트 잔액이 부족하면 InsufficientPointException을 던진다")
     void applyPoints_throwsInsufficientPointException_whenBalanceNotEnough() {
-        UserPoint userPoint = UserPoint.builder().userId(1L).balance(500L).build();
-
-        given(userPointRepository.findByUserId(1L)).willReturn(Optional.of(userPoint));
+        willThrow(new InsufficientPointException()).given(usePointUseCase).usePoint(1L, 3000L);
 
         assertThatThrownBy(() -> orderCreationHelper.applyPoints(3000L, 1L, 6000L))
                 .isInstanceOf(InsufficientPointException.class);

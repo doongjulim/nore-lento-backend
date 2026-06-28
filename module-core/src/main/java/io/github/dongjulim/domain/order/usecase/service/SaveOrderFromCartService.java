@@ -72,6 +72,7 @@ public class SaveOrderFromCartService implements SaveOrderFromCartUseCase {
                 .userId(user.getId())
                 .shippingAddressId(resolvedShippingAddressId)
                 .totalPrice(totalPrice)
+                .usedPoints(request.getUsePoints())
                 .build());
 
         for (CartItem cartItem : cartItems) {
