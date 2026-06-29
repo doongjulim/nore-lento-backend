@@ -74,6 +74,14 @@ public class User extends BaseEntity {
         this.grade = grade;
     }
 
+    public void updateRole(Role role) {
+        this.role = role;
+    }
+
+    public void updateGrade(Grade grade) {
+        this.grade = grade;
+    }
+
     public void updatePassword(String password) {
         this.password = password;
     }
