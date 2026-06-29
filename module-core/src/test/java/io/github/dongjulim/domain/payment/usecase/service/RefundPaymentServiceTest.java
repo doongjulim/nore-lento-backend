@@ -11,6 +11,8 @@ import io.github.dongjulim.domain.payment.entity.Payment;
 import io.github.dongjulim.domain.payment.enums.PaymentMethod;
 import io.github.dongjulim.domain.payment.enums.PaymentStatus;
 import io.github.dongjulim.domain.payment.repository.PaymentRepository;
+import io.github.dongjulim.domain.point.usecase.RefundPointUseCase;
+import io.github.dongjulim.domain.point.usecase.RevokePointUseCase;
 import io.github.dongjulim.domain.stock.entity.Stock;
 import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
@@ -29,6 +31,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class RefundPaymentServiceTest {
@@ -47,6 +50,12 @@ class RefundPaymentServiceTest {
 
     @Mock
     private UserLoader userLoader;
+
+    @Mock
+    private RevokePointUseCase revokePointUseCase;
+
+    @Mock
+    private RefundPointUseCase refundPointUseCase;
 
     @InjectMocks
     private RefundPaymentService refundPaymentService;
@@ -126,5 +135,54 @@ class RefundPaymentServiceTest {
 
         assertThatThrownBy(() -> refundPaymentService.refundPayment(1L, "testuser"))
                 .isInstanceOf(PaymentNotRefundableException.class);
+    }
+
+    @Test
+    @DisplayName("refundPayment - 환불 시 결제로 적립된 포인트가 회수된다")
+    void refundPayment_shouldRevokeEarnedPoints() {
+        Payment payment = Payment.builder().id(1L).orderId(10L).userId(1L).method(PaymentMethod.CARD).status(PaymentStatus.COMPLETED).amount(10000L).build();
+        Order order = Order.builder().id(10L).userId(1L).status(OrderStatus.COMPLETED).totalPrice(10000L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(paymentRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(payment));
+        given(orderRepository.findById(10L)).willReturn(Optional.of(order));
+        given(orderItemRepository.findAllByOrderId(10L)).willReturn(List.of());
+
+        refundPaymentService.refundPayment(1L, "testuser");
+
+        then(revokePointUseCase).should().revokePoint(1L, 100L); // 10000 / 100 = 100
+    }
+
+    @Test
+    @DisplayName("refundPayment - 주문 생성 시 사용한 포인트가 환불된다")
+    void refundPayment_shouldRefundUsedPoints() {
+        Payment payment = Payment.builder().id(1L).orderId(10L).userId(1L).method(PaymentMethod.CARD).status(PaymentStatus.COMPLETED).amount(9000L).build();
+        Order order = Order.builder().id(10L).userId(1L).status(OrderStatus.COMPLETED).totalPrice(9000L).usedPoints(1000L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(paymentRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(payment));
+        given(orderRepository.findById(10L)).willReturn(Optional.of(order));
+        given(orderItemRepository.findAllByOrderId(10L)).willReturn(List.of());
+
+        refundPaymentService.refundPayment(1L, "testuser");
+
+        then(refundPointUseCase).should().refundPoint(1L, 1000L);
+    }
+
+    @Test
+    @DisplayName("refundPayment - 포인트를 사용하지 않은 주문은 포인트 환불이 호출되지 않는다")
+    void refundPayment_shouldNotRefundPoints_whenNoPointsUsed() {
+        Payment payment = Payment.builder().id(1L).orderId(10L).userId(1L).method(PaymentMethod.CARD).status(PaymentStatus.COMPLETED).amount(50L).build();
+        Order order = Order.builder().id(10L).userId(1L).status(OrderStatus.COMPLETED).totalPrice(50L).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(paymentRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(payment));
+        given(orderRepository.findById(10L)).willReturn(Optional.of(order));
+        given(orderItemRepository.findAllByOrderId(10L)).willReturn(List.of());
+
+        refundPaymentService.refundPayment(1L, "testuser");
+
+        then(revokePointUseCase).shouldHaveNoInteractions(); // totalPrice=50 → earnedPoints=0
+        then(refundPointUseCase).shouldHaveNoInteractions(); // usedPoints=null
     }
 }

@@ -42,4 +42,10 @@ public class UserPoint extends BaseEntity {
         }
         this.balance -= amount;
     }
+
+    public long revoke(long amount) {
+        long deducted = Math.min(this.balance, amount);
+        this.balance -= deducted;
+        return deducted;
+    }
 }

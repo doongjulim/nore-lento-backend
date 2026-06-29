@@ -9,6 +9,8 @@ import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.payment.entity.Payment;
 import io.github.dongjulim.domain.payment.repository.PaymentRepository;
 import io.github.dongjulim.domain.payment.usecase.RefundPaymentUseCase;
+import io.github.dongjulim.domain.point.usecase.RefundPointUseCase;
+import io.github.dongjulim.domain.point.usecase.RevokePointUseCase;
 import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
@@ -28,6 +30,8 @@ public class RefundPaymentService implements RefundPaymentUseCase {
     private final OrderItemRepository orderItemRepository;
     private final StockRepository stockRepository;
     private final UserLoader userLoader;
+    private final RevokePointUseCase revokePointUseCase;
+    private final RefundPointUseCase refundPointUseCase;
 
     @Override
     public void refundPayment(Long paymentId, String username) {
@@ -47,6 +51,15 @@ public class RefundPaymentService implements RefundPaymentUseCase {
         for (OrderItem item : items) {
             stockRepository.findByProductId(item.getProductId())
                     .ifPresent(stock -> stock.increase(item.getQuantity()));
+        }
+
+        long earnedPoints = order.getTotalPrice() / 100;
+        if (earnedPoints > 0) {
+            revokePointUseCase.revokePoint(user.getId(), earnedPoints);
+        }
+
+        if (order.getUsedPoints() != null && order.getUsedPoints() > 0) {
+            refundPointUseCase.refundPoint(user.getId(), order.getUsedPoints());
         }
     }
 }
