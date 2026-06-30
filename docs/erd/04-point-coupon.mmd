@@ -1,0 +1,9 @@
+---
+title: 포인트 & 쿠폰
+---
+erDiagram
+    MEMBER ||--o| USER_POINT : "잔액 1:1"
+    MEMBER ||--o{ POINT_HISTORY : "변동 이력"
+
+    MEMBER ||--o{ USER_COUPON : "보유"
+    COUPON ||--o{ USER_COUPON : "발급"

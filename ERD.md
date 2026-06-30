@@ -70,6 +70,32 @@ erDiagram
 
 ---
 
+## 관계 이미지 (도메인별)
+
+> 이미지 소스: [`docs/erd/`](docs/erd/)
+
+### 1. 상품 도메인
+
+![상품 도메인](docs/erd/01-product.png)
+
+### 2. 장바구니 & 위시리스트
+
+![장바구니 & 위시리스트](docs/erd/02-cart-wishlist.png)
+
+### 3. 주문 & 결제 & 배송
+
+![주문 & 결제 & 배송](docs/erd/03-order-payment-delivery.png)
+
+### 4. 포인트 & 쿠폰
+
+![포인트 & 쿠폰](docs/erd/04-point-coupon.png)
+
+### 5. 커뮤니티 & 알림
+
+![커뮤니티 & 알림](docs/erd/05-community.png)
+
+---
+
 ## 상세 ERD (컬럼 포함)
 
 ```mermaid
