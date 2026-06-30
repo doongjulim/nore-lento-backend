@@ -2,6 +2,47 @@
 
 > 모든 엔티티는 `BaseEntity`를 상속하며 `create_at / create_by / update_at / update_by` 컬럼을 공통으로 가집니다.
 
+---
+
+## 관계 Overview (한눈에 보기)
+
+```mermaid
+erDiagram
+    MEMBER ||--o{ PRODUCT : "판매"
+    MEMBER ||--o{ CART : "보유"
+    MEMBER ||--o{ ORDERS : "주문"
+    MEMBER ||--o{ PAYMENT : "결제자"
+    MEMBER ||--o{ REVIEW : "작성"
+    MEMBER ||--o{ NOTIFICATION : "수신"
+    MEMBER ||--o{ NOTICE : "작성"
+    MEMBER ||--o{ NOTICE_LIKE : "좋아요"
+    MEMBER ||--o{ USER_COUPON : "보유"
+    MEMBER ||--o| USER_POINT : "포인트"
+    MEMBER ||--o{ POINT_HISTORY : "이력"
+    MEMBER ||--o{ WISHLIST : "위시리스트"
+    MEMBER ||--o{ SHIPPING_ADDRESS : "배송지"
+
+    PRODUCT_CATEGORY ||--o{ PRODUCT : "분류"
+    PRODUCT ||--o| STOCK : "재고"
+    PRODUCT ||--o{ CART_ITEM : "담김"
+    PRODUCT ||--o{ ORDER_ITEM : "주문됨"
+    PRODUCT ||--o{ REVIEW : "리뷰"
+    PRODUCT ||--o{ WISHLIST : "담김"
+
+    CART ||--|{ CART_ITEM : "포함"
+    SHIPPING_ADDRESS ||--o{ ORDERS : "배송지"
+    ORDERS ||--|{ ORDER_ITEM : "포함"
+    ORDERS ||--o| PAYMENT : "결제"
+    ORDERS ||--o| DELIVERY : "배송"
+
+    COUPON ||--o{ USER_COUPON : "발급"
+    NOTICE ||--o{ NOTICE_LIKE : "좋아요"
+```
+
+---
+
+## 상세 ERD (컬럼 포함)
+
 ```mermaid
 erDiagram
 
