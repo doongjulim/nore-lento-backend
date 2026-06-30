@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Git 규칙
+
+**`git commit` 및 `git push`는 반드시 사용자에게 먼저 확인을 받은 후 실행한다.**
+작업이 완료되어도 명시적인 허가 없이 커밋하거나 푸시하지 않는다.
+
 ## Commands
 
 ```bash
