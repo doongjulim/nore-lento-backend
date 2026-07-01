@@ -31,8 +31,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final String AUTHENTICATION_URL = "/api/v2/login";
-    private final String API_ROOT_URL = "/api/v2/**";
+    private static final String AUTHENTICATION_URL = "/api/v2/login";
+    private static final String API_ROOT_URL = "/api/v2/**";
+    private static final String[] ADMIN_ROLES = { Role.ADMIN.name(), Role.MASTER.name() };
+
     private final JwtAuthenticationProvider jwtAuthenticationProvider;
     private final JwtTokenIssueProvider jwtTokenIssueProvider;
     private final AuthenticationSuccessHandler successHandler;
@@ -41,81 +43,74 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        var authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.authenticationProvider(jwtAuthenticationProvider);
-        authenticationManagerBuilder.authenticationProvider(jwtTokenIssueProvider);
-
-        return authenticationManagerBuilder.build();
+        var builder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        builder.authenticationProvider(jwtAuthenticationProvider);
+        builder.authenticationProvider(jwtTokenIssueProvider);
+        return builder.build();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager)
             throws Exception {
-        http.authorizeRequests().and().csrf().disable()
-                .authorizeRequests()
-                .antMatchers(HttpMethod.POST,   "/api/v2/deliveries").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.PATCH,  "/api/v2/deliveries/*/status").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.DELETE, "/api/v2/deliveries/*/return").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.POST,   "/api/v2/notice").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.PUT,    "/api/v2/notice/*").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.DELETE, "/api/v2/notice/*").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.POST,   "/api/v2/notifications").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.POST,   "/api/v2/product/categories").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.PUT,    "/api/v2/product/categories/*").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.DELETE, "/api/v2/product/categories/*").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.PATCH,  "/api/v2/product/*/stock").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.POST,   "/api/v2/coupons").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.POST,   "/api/v2/coupons/*/users/*").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.PATCH,  "/api/v2/user/*/role").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .antMatchers(HttpMethod.PATCH,  "/api/v2/user/*/grade").hasAnyRole(Role.ADMIN.name(), Role.MASTER.name())
-                .and()
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .exceptionHandling()
-                .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .addFilterBefore(jwtTokenIssueFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(
-                        jwtTokenAuthenticationFilter(List.of(
-                                new AntPathRequestMatcher(AUTHENTICATION_URL),
-                                new AntPathRequestMatcher("/api/v2/notice", "GET"),
-                                new AntPathRequestMatcher("/api/v2/notice/*", "GET"),
-                                new AntPathRequestMatcher("/api/v2/user", "POST")
-                        ), authenticationManager),
-                        UsernamePasswordAuthenticationFilter.class
-                )
-        ;
+        http
+            .csrf().disable()
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeRequests(auth -> auth
+                .antMatchers(HttpMethod.POST,   "/api/v2/deliveries").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.PATCH,  "/api/v2/deliveries/*/status").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.DELETE, "/api/v2/deliveries/*/return").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.POST,   "/api/v2/notice").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.PUT,    "/api/v2/notice/*").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.DELETE, "/api/v2/notice/*").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.POST,   "/api/v2/notifications").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.POST,   "/api/v2/product/categories").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.PUT,    "/api/v2/product/categories/*").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.DELETE, "/api/v2/product/categories/*").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.PATCH,  "/api/v2/product/*/stock").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.POST,   "/api/v2/coupons").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.POST,   "/api/v2/coupons/*/users/*").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.PATCH,  "/api/v2/user/*/role").hasAnyRole(ADMIN_ROLES)
+                .antMatchers(HttpMethod.PATCH,  "/api/v2/user/*/grade").hasAnyRole(ADMIN_ROLES)
+            )
+            .addFilterBefore(jwtTokenIssueFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(
+                jwtTokenAuthenticationFilter(List.of(
+                    new AntPathRequestMatcher(AUTHENTICATION_URL),
+                    new AntPathRequestMatcher("/api/v2/notice", "GET"),
+                    new AntPathRequestMatcher("/api/v2/notice/*", "GET"),
+                    new AntPathRequestMatcher("/api/v2/user", "POST")
+                ), authenticationManager),
+                UsernamePasswordAuthenticationFilter.class
+            );
 
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173")); // 프론트엔드 주소
+        config.setAllowedOrigins(List.of("http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true); // 자격 증명 허용 (매우 중요)
+        config.setAllowCredentials(true);
         config.setMaxAge(3600L);
-        source.registerCorsConfiguration("/**", config); // 모든 경로에 CORS 적용
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 
     private JwtTokenIssueFilter jwtTokenIssueFilter(AuthenticationManager authenticationManager) {
         var filter = new JwtTokenIssueFilter(AUTHENTICATION_URL, objectMapper, successHandler, failureHandler);
         filter.setAuthenticationManager(authenticationManager);
-
         return filter;
     }
 
     private JwtTokenAuthenticationFilter jwtTokenAuthenticationFilter(List<RequestMatcher> pathsToSkip,
                                                                       AuthenticationManager authenticationManager) {
-        var matcher = new SkipPathRequestMatcher(pathsToSkip, API_ROOT_URL);
-
-        var filter = new JwtTokenAuthenticationFilter(matcher, failureHandler);
+        var filter = new JwtTokenAuthenticationFilter(new SkipPathRequestMatcher(pathsToSkip, API_ROOT_URL), failureHandler);
         filter.setAuthenticationManager(authenticationManager);
-
         return filter;
     }
 }

@@ -124,6 +124,27 @@ class FindProductServiceTest {
     }
 
     @Test
+    @DisplayName("findProduct - 설명에 키워드가 포함된 상품이 반환된다")
+    void findProduct_shouldReturnProductsByDescriptionKeyword() {
+        User user = User.builder().id(1L).name("판매자").build();
+        ProductCategory category = ProductCategory.builder().id(1L).name("식품").deleteCheck(false).build();
+        Product productWithDescription = Product.builder()
+                .id(2L).userId(1L).name("딸기").price(3000L).description("신선한 제철 딸기").categoryId(1L).deleteCheck(false).build();
+        ReflectionTestUtils.setField(productWithDescription, "user", user);
+        ReflectionTestUtils.setField(productWithDescription, "category", category);
+
+        FindProductRequest request = new FindProductRequest();
+        request.setKeyword("신선한");
+        given(productRepository.findAllBySearchCondition(null, "신선한", null, null, null, pageable))
+                .willReturn(new PageImpl<>(List.of(productWithDescription), pageable, 1));
+
+        Page<FindProductResponse> result = findProductService.findProduct(request, pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getName()).isEqualTo("딸기");
+    }
+
+    @Test
     @DisplayName("findProduct - 검색 결과가 없으면 빈 페이지를 반환한다")
     void findProduct_shouldReturnEmptyPage_whenNoMatch() {
         FindProductRequest request = new FindProductRequest();

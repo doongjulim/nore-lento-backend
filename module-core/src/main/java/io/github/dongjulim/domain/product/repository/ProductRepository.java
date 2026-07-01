@@ -15,7 +15,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("SELECT p FROM product p WHERE p.deleteCheck = false" +
             " AND (:categoryId IS NULL OR p.categoryId = :categoryId)" +
-            " AND (:keyword IS NULL OR p.name LIKE %:keyword%)" +
+            " AND (:keyword IS NULL OR p.name LIKE %:keyword% OR p.description LIKE %:keyword%)" +
             " AND (:minPrice IS NULL OR p.price >= :minPrice)" +
             " AND (:maxPrice IS NULL OR p.price <= :maxPrice)" +
             " AND (:sellerId IS NULL OR p.userId = :sellerId)")
