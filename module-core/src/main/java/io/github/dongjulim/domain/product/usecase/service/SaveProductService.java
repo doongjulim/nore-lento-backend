@@ -26,7 +26,7 @@ public class SaveProductService implements SaveProductUseCase {
     private final UserLoader userLoader;
 
     @Override
-    public void saveProduct(SaveProductRequest request, String username) {
+    public void saveProduct(SaveProductRequest request, String imageUrl, String username) {
         User user = userLoader.load(username);
         ProductCategory category = productCategoryRepository.findByIdAndDeleteCheckFalse(request.getCategoryId())
                 .orElseThrow(ProductCategoryNotFoundException::new);
@@ -36,6 +36,7 @@ public class SaveProductService implements SaveProductUseCase {
                 .price(request.getPrice())
                 .description(request.getDescription())
                 .categoryId(category.getId())
+                .imageUrl(imageUrl)
                 .build());
         stockRepository.save(Stock.builder()
                 .productId(product.getId())

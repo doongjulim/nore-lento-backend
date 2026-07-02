@@ -31,7 +31,8 @@ public class CommonExceptionHandler {
             Map.entry(ErrorCode.ALREADY_LIKED,                   HttpStatus.CONFLICT),
             Map.entry(ErrorCode.PRODUCT_CATEGORY_NOT_FOUND,      HttpStatus.NOT_FOUND),
             Map.entry(ErrorCode.REVIEW_NOT_FOUND,                HttpStatus.NOT_FOUND),
-            Map.entry(ErrorCode.NOTIFICATION_NOT_FOUND,          HttpStatus.NOT_FOUND)
+            Map.entry(ErrorCode.NOTIFICATION_NOT_FOUND,          HttpStatus.NOT_FOUND),
+            Map.entry(ErrorCode.INVALID_FILE,                    HttpStatus.BAD_REQUEST)
     );
 
     @ExceptionHandler(DomainException.class)

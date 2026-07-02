@@ -64,7 +64,7 @@ class SaveProductServiceTest {
         given(productCategoryRepository.findByIdAndDeleteCheckFalse(5L)).willReturn(Optional.of(category));
         given(productRepository.save(any(Product.class))).willReturn(savedProduct);
 
-        saveProductService.saveProduct(request, "testuser");
+        saveProductService.saveProduct(request, "/images/sample.jpg", "testuser");
 
         ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
         then(productRepository).should().save(productCaptor.capture());
@@ -94,7 +94,7 @@ class SaveProductServiceTest {
         given(userLoader.load("testuser")).willReturn(user);
         given(productCategoryRepository.findByIdAndDeleteCheckFalse(99L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> saveProductService.saveProduct(request, "testuser"))
+        assertThatThrownBy(() -> saveProductService.saveProduct(request, null, "testuser"))
                 .isInstanceOf(ProductCategoryNotFoundException.class);
     }
 }

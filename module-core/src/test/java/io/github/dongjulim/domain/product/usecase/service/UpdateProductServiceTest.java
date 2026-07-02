@@ -49,7 +49,7 @@ class UpdateProductServiceTest {
         given(productRepository.findByIdAndDeleteCheckFalse(1L)).willReturn(Optional.of(product));
         given(productCategoryRepository.findByIdAndDeleteCheckFalse(7L)).willReturn(Optional.of(newCategory));
 
-        updateProductService.updateProduct(1L, request);
+        updateProductService.updateProduct(1L, request, null);
 
         assertThat(product.getName()).isEqualTo("배");
         assertThat(product.getPrice()).isEqualTo(2000L);
@@ -67,7 +67,7 @@ class UpdateProductServiceTest {
 
         given(productRepository.findByIdAndDeleteCheckFalse(99L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> updateProductService.updateProduct(99L, request))
+        assertThatThrownBy(() -> updateProductService.updateProduct(99L, request, null))
                 .isInstanceOf(ProductNotFoundException.class);
     }
 
@@ -85,7 +85,7 @@ class UpdateProductServiceTest {
         given(productRepository.findByIdAndDeleteCheckFalse(1L)).willReturn(Optional.of(product));
         given(productCategoryRepository.findByIdAndDeleteCheckFalse(99L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> updateProductService.updateProduct(1L, request))
+        assertThatThrownBy(() -> updateProductService.updateProduct(1L, request, null))
                 .isInstanceOf(ProductCategoryNotFoundException.class);
     }
 }

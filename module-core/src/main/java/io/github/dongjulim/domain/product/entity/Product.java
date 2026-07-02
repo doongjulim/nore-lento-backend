@@ -44,6 +44,9 @@ public class Product extends BaseEntity {
     @JoinColumn(name = "category_id", insertable = false, updatable = false)
     private ProductCategory category;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(columnDefinition = "default 'false'")
     private Boolean deleteCheck;
 
@@ -55,6 +58,7 @@ public class Product extends BaseEntity {
             Long price,
             String description,
             Long categoryId,
+            String imageUrl,
             Boolean deleteCheck,
             LocalDateTime createAt,
             String createBy,
@@ -68,6 +72,7 @@ public class Product extends BaseEntity {
         this.price = price;
         this.description = description;
         this.categoryId = categoryId;
+        this.imageUrl = imageUrl;
         this.deleteCheck = deleteCheck != null ? deleteCheck : false;
     }
 
@@ -76,6 +81,10 @@ public class Product extends BaseEntity {
         this.price = price;
         this.description = description;
         this.categoryId = categoryId;
+    }
+
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public void deleteProduct() {

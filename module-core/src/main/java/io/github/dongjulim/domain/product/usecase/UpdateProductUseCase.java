@@ -4,5 +4,5 @@ import io.github.dongjulim.domain.product.dto.UpdateProductRequest;
 
 public interface UpdateProductUseCase {
 
-    void updateProduct(Long id, UpdateProductRequest request);
+    void updateProduct(Long id, UpdateProductRequest request, String imageUrl);
 }

@@ -4,5 +4,5 @@ import io.github.dongjulim.domain.product.dto.SaveProductRequest;
 
 public interface SaveProductUseCase {
 
-    void saveProduct(SaveProductRequest request, String username);
+    void saveProduct(SaveProductRequest request, String imageUrl, String username);
 }

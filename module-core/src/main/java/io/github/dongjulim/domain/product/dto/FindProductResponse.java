@@ -14,6 +14,7 @@ public class FindProductResponse {
     private final Long id;
     private final String name;
     private final Long price;
+    private final String imageUrl;
     private final FindProductCategoryResponse category;
     private final String sellerName;
     private final Double averageRating;
@@ -25,6 +26,7 @@ public class FindProductResponse {
                 .id(product.getId())
                 .name(product.getName())
                 .price(product.getPrice())
+                .imageUrl(product.getImageUrl())
                 .category(FindProductCategoryResponse.from(product.getCategory()))
                 .sellerName(product.getUser().getName())
                 .averageRating(averageRating)

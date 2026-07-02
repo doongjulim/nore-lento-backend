@@ -21,11 +21,14 @@ public class UpdateProductService implements UpdateProductUseCase {
     private final ProductCategoryRepository productCategoryRepository;
 
     @Override
-    public void updateProduct(Long id, UpdateProductRequest request) {
+    public void updateProduct(Long id, UpdateProductRequest request, String imageUrl) {
         Product product = productRepository.findByIdAndDeleteCheckFalse(id)
                 .orElseThrow(ProductNotFoundException::new);
         ProductCategory category = productCategoryRepository.findByIdAndDeleteCheckFalse(request.getCategoryId())
                 .orElseThrow(ProductCategoryNotFoundException::new);
         product.updateProduct(request.getName(), request.getPrice(), request.getDescription(), category.getId());
+        if (imageUrl != null) {
+            product.updateImageUrl(imageUrl);
+        }
     }
 }

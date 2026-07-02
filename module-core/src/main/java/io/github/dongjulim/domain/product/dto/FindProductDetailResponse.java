@@ -15,6 +15,7 @@ public class FindProductDetailResponse {
     private final String name;
     private final Long price;
     private final String description;
+    private final String imageUrl;
     private final FindProductCategoryResponse category;
     private final Integer stock;
     private final Double averageRating;
@@ -30,6 +31,7 @@ public class FindProductDetailResponse {
                 .name(product.getName())
                 .price(product.getPrice())
                 .description(product.getDescription())
+                .imageUrl(product.getImageUrl())
                 .category(FindProductCategoryResponse.from(product.getCategory()))
                 .stock(stock)
                 .averageRating(averageRating)
