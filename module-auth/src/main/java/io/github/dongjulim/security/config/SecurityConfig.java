@@ -79,7 +79,8 @@ public class SecurityConfig {
                     new AntPathRequestMatcher(AUTHENTICATION_URL),
                     new AntPathRequestMatcher("/api/v2/notice", "GET"),
                     new AntPathRequestMatcher("/api/v2/notice/*", "GET"),
-                    new AntPathRequestMatcher("/api/v2/user", "POST")
+                    new AntPathRequestMatcher("/api/v2/user", "POST"),
+                    new AntPathRequestMatcher("/api/v2/user/password/reset", "POST")
                 ), authenticationManager),
                 UsernamePasswordAuthenticationFilter.class
             );

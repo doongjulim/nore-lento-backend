@@ -15,5 +15,10 @@ spring:
     username: sa
     password:
     driver-class-name: org.h2.Driver
+  mail:
+    host: localhost
+    port: 25
+    username: test
+    password: test
 upload:
   dir: "/Users/limdongju/test/file"

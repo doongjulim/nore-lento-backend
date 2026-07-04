@@ -2,17 +2,22 @@ package io.github.dongjulim.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Configuration
 @EnableAsync
 public class AsyncConfig {
 
-    @Bean
-    public ExecutorService executorService() {
-        return Executors.newCachedThreadPool();
+    @Bean(name = "taskExecutor")
+    public TaskExecutor taskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("notification-async-");
+        executor.initialize();
+        return executor;
     }
 }

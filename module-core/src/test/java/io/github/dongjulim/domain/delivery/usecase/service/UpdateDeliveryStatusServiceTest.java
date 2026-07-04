@@ -5,8 +5,7 @@ import io.github.dongjulim.domain.common.exception.DeliveryStatusNotAdvancableEx
 import io.github.dongjulim.domain.delivery.entity.Delivery;
 import io.github.dongjulim.domain.delivery.enums.DeliveryStatus;
 import io.github.dongjulim.domain.delivery.repository.DeliveryRepository;
-import io.github.dongjulim.domain.notification.entity.Notification;
-import io.github.dongjulim.domain.notification.repository.NotificationRepository;
+import io.github.dongjulim.domain.notification.service.AsyncNotificationService;
 import io.github.dongjulim.domain.order.entity.Order;
 import io.github.dongjulim.domain.order.enums.OrderStatus;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
@@ -21,7 +20,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -35,7 +35,7 @@ class UpdateDeliveryStatusServiceTest {
     private OrderRepository orderRepository;
 
     @Mock
-    private NotificationRepository notificationRepository;
+    private AsyncNotificationService asyncNotificationService;
 
     @InjectMocks
     private UpdateDeliveryStatusService updateDeliveryStatusService;
@@ -69,8 +69,8 @@ class UpdateDeliveryStatusServiceTest {
     }
 
     @Test
-    @DisplayName("updateDeliveryStatus - 배송 상태 변경 시 구매자에게 알림이 발송된다")
-    void updateDeliveryStatus_shouldSaveNotification_whenStatusChanges() {
+    @DisplayName("updateDeliveryStatus - 배송 상태 변경 시 구매자에게 비동기 알림이 발송된다")
+    void updateDeliveryStatus_shouldSendNotificationAsync_whenStatusChanges() {
         Order order = Order.builder().id(1L).userId(10L).status(OrderStatus.COMPLETED).totalPrice(5000L).build();
         Delivery delivery = Delivery.builder().id(1L).orderId(1L).address("서울시 강남구").status(DeliveryStatus.PREPARING).build();
 
@@ -79,7 +79,7 @@ class UpdateDeliveryStatusServiceTest {
 
         updateDeliveryStatusService.updateDeliveryStatus(1L);
 
-        then(notificationRepository).should().save(any(Notification.class));
+        then(asyncNotificationService).should().send(anyLong(), anyString(), anyString());
     }
 
     @Test

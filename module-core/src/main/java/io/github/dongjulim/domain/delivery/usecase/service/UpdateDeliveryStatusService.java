@@ -6,8 +6,7 @@ import io.github.dongjulim.domain.delivery.entity.Delivery;
 import io.github.dongjulim.domain.delivery.enums.DeliveryStatus;
 import io.github.dongjulim.domain.delivery.repository.DeliveryRepository;
 import io.github.dongjulim.domain.delivery.usecase.UpdateDeliveryStatusUseCase;
-import io.github.dongjulim.domain.notification.entity.Notification;
-import io.github.dongjulim.domain.notification.repository.NotificationRepository;
+import io.github.dongjulim.domain.notification.service.AsyncNotificationService;
 import io.github.dongjulim.domain.order.entity.Order;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,7 @@ public class UpdateDeliveryStatusService implements UpdateDeliveryStatusUseCase 
 
     private final DeliveryRepository deliveryRepository;
     private final OrderRepository orderRepository;
-    private final NotificationRepository notificationRepository;
+    private final AsyncNotificationService asyncNotificationService;
 
     @Override
     public void updateDeliveryStatus(Long deliveryId) {
@@ -33,11 +32,11 @@ public class UpdateDeliveryStatusService implements UpdateDeliveryStatusUseCase 
         Order order = orderRepository.findById(delivery.getOrderId())
                 .orElseThrow(OrderNotFoundException::new);
 
-        notificationRepository.save(Notification.builder()
-                .userId(order.getUserId())
-                .title(notificationTitle(delivery.getStatus()))
-                .content(notificationContent(delivery.getStatus()))
-                .build());
+        asyncNotificationService.send(
+                order.getUserId(),
+                notificationTitle(delivery.getStatus()),
+                notificationContent(delivery.getStatus())
+        );
     }
 
     private String notificationTitle(DeliveryStatus status) {

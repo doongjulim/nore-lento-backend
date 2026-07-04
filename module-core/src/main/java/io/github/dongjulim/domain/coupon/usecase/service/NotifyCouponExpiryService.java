@@ -5,8 +5,7 @@ import io.github.dongjulim.domain.coupon.entity.UserCoupon;
 import io.github.dongjulim.domain.coupon.repository.CouponRepository;
 import io.github.dongjulim.domain.coupon.repository.UserCouponRepository;
 import io.github.dongjulim.domain.coupon.usecase.NotifyCouponExpiryUseCase;
-import io.github.dongjulim.domain.notification.entity.Notification;
-import io.github.dongjulim.domain.notification.repository.NotificationRepository;
+import io.github.dongjulim.domain.notification.service.AsyncNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +22,7 @@ public class NotifyCouponExpiryService implements NotifyCouponExpiryUseCase {
 
     private final CouponRepository couponRepository;
     private final UserCouponRepository userCouponRepository;
-    private final NotificationRepository notificationRepository;
+    private final AsyncNotificationService asyncNotificationService;
 
     @Override
     public void notifyCouponExpiry() {
@@ -44,12 +43,12 @@ public class NotifyCouponExpiryService implements NotifyCouponExpiryUseCase {
 
         for (UserCoupon userCoupon : userCoupons) {
             Coupon coupon = couponMap.get(userCoupon.getCouponId());
-            notificationRepository.save(Notification.builder()
-                    .userId(userCoupon.getUserId())
-                    .title("쿠폰 만료 임박 알림")
-                    .content(String.format("'%s' 쿠폰이 %s에 만료됩니다. 기간 내에 사용해 주세요.",
-                            coupon.getName(), coupon.getExpiresAt().toLocalDate()))
-                    .build());
+            asyncNotificationService.send(
+                    userCoupon.getUserId(),
+                    "쿠폰 만료 임박 알림",
+                    String.format("'%s' 쿠폰이 %s에 만료됩니다. 기간 내에 사용해 주세요.",
+                            coupon.getName(), coupon.getExpiresAt().toLocalDate())
+            );
         }
     }
 }

@@ -15,7 +15,7 @@ public class UpdatePasswordController {
 
     private final UpdatePasswordUseCase updatePasswordUseCase;
 
-    @PatchMapping("/api/v2/users/{id}/password")
+    @PatchMapping("/api/v2/user/{id}/password")
     public ResponseEntity<Void> updatePassword(
             @PathVariable Long id,
             @RequestBody UpdatePasswordRequest request
