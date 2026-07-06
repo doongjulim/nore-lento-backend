@@ -3,6 +3,7 @@ package io.github.dongjulim.domain.cart.usecase.service;
 import io.github.dongjulim.domain.cart.dto.FindCartResponse;
 import io.github.dongjulim.domain.cart.entity.Cart;
 import io.github.dongjulim.domain.cart.repository.CartRepository;
+import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
 import org.junit.jupiter.api.DisplayName;
@@ -12,9 +13,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
@@ -22,6 +25,9 @@ class FindCartServiceTest {
 
     @Mock
     private CartRepository cartRepository;
+
+    @Mock
+    private StockRepository stockRepository;
 
     @Mock
     private UserLoader userLoader;
@@ -37,6 +43,7 @@ class FindCartServiceTest {
 
         given(userLoader.load("testuser")).willReturn(user);
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(stockRepository.findAllByProductIdIn(anyList())).willReturn(List.of());
 
         FindCartResponse result = findCartService.findCart("testuser");
 

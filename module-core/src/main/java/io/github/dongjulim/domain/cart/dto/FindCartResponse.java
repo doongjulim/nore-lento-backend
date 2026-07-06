@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Getter
@@ -15,9 +16,9 @@ public class FindCartResponse {
     private final List<CartItemResponse> items;
     private final Long totalAmount;
 
-    public static FindCartResponse from(Cart cart) {
+    public static FindCartResponse from(Cart cart, Map<Long, Integer> stockQuantities) {
         List<CartItemResponse> items = cart.getCartItems().stream()
-                .map(CartItemResponse::from)
+                .map(item -> CartItemResponse.from(item, stockQuantities.getOrDefault(item.getProductId(), 0)))
                 .collect(Collectors.toList());
 
         long totalAmount = items.stream()

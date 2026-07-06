@@ -5,6 +5,7 @@ import io.github.dongjulim.domain.cart.entity.CartItem;
 import io.github.dongjulim.domain.cart.repository.CartRepository;
 import io.github.dongjulim.domain.common.exception.CartEmptyException;
 import io.github.dongjulim.domain.common.exception.CartNotFoundException;
+import io.github.dongjulim.domain.common.exception.OutOfStockException;
 import io.github.dongjulim.domain.common.exception.ProductNotFoundException;
 import io.github.dongjulim.domain.common.exception.StockNotFoundException;
 import io.github.dongjulim.domain.order.component.OrderCreationHelper;
@@ -66,6 +67,14 @@ public class SaveOrderFromCartService implements SaveOrderFromCartUseCase {
 
         if (request.getUsePoints() != null && request.getUsePoints() > 0) {
             totalPrice = orderCreationHelper.applyPoints(request.getUsePoints(), user.getId(), totalPrice);
+        }
+
+        for (CartItem cartItem : cartItems) {
+            Stock stock = stockRepository.findByProductId(cartItem.getProductId())
+                    .orElseThrow(StockNotFoundException::new);
+            if (stock.getQuantity() < cartItem.getQuantity()) {
+                throw new OutOfStockException();
+            }
         }
 
         Order order = orderRepository.save(Order.builder()

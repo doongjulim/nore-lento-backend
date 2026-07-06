@@ -152,8 +152,6 @@ class SaveOrderFromCartServiceTest {
         given(orderCreationHelper.resolveShippingAddressId(1L, 1L)).willReturn(1L);
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product1));
         given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
-        given(orderRepository.save(any(Order.class))).willReturn(
-                Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING).totalPrice(10000L).shippingAddressId(1L).build());
 
         assertThatThrownBy(() -> saveOrderFromCartService.saveOrderFromCart(buildRequest(1L, null), "testuser"))
                 .isInstanceOf(OutOfStockException.class);

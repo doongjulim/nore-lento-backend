@@ -7,6 +7,9 @@ import io.github.dongjulim.domain.cart.repository.CartItemRepository;
 import io.github.dongjulim.domain.cart.repository.CartRepository;
 import io.github.dongjulim.domain.common.exception.CartItemNotFoundException;
 import io.github.dongjulim.domain.common.exception.CartNotFoundException;
+import io.github.dongjulim.domain.common.exception.OutOfStockException;
+import io.github.dongjulim.domain.stock.entity.Stock;
+import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +37,9 @@ class UpdateCartItemServiceTest {
     private CartRepository cartRepository;
 
     @Mock
+    private StockRepository stockRepository;
+
+    @Mock
     private UserLoader userLoader;
 
     @InjectMocks
@@ -55,13 +61,34 @@ class UpdateCartItemServiceTest {
         UpdateCartItemRequest request = new UpdateCartItemRequest();
         ReflectionTestUtils.setField(request, "quantity", 5);
 
+        Stock stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
+
         given(userLoader.load("testuser")).willReturn(user);
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
         given(cartItemRepository.findById(1L)).willReturn(Optional.of(cartItem));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
 
         updateCartItemService.updateCartItem(1L, request, "testuser");
 
         assertThat(cartItem.getQuantity()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("updateCartItem - 재고가 부족하면 OutOfStockException을 던진다")
+    void updateCartItem_throwsOutOfStockException_whenStockInsufficient() {
+        CartItem cartItem = CartItem.builder().id(1L).cartId(100L).productId(10L).quantity(2).build();
+        UpdateCartItemRequest request = new UpdateCartItemRequest();
+        ReflectionTestUtils.setField(request, "quantity", 20);
+
+        Stock insufficientStock = Stock.builder().id(1L).productId(10L).quantity(5).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(cartItemRepository.findById(1L)).willReturn(Optional.of(cartItem));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(insufficientStock));
+
+        assertThatThrownBy(() -> updateCartItemService.updateCartItem(1L, request, "testuser"))
+                .isInstanceOf(OutOfStockException.class);
     }
 
     @Test

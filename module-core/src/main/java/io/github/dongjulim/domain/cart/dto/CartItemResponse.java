@@ -14,8 +14,9 @@ public class CartItemResponse {
     private final Long productPrice;
     private final Integer quantity;
     private final Long totalPrice;
+    private final Integer stockQuantity;
 
-    public static CartItemResponse from(CartItem cartItem) {
+    public static CartItemResponse from(CartItem cartItem, Integer stockQuantity) {
         return CartItemResponse.builder()
                 .cartItemId(cartItem.getId())
                 .productId(cartItem.getProductId())
@@ -23,6 +24,7 @@ public class CartItemResponse {
                 .productPrice(cartItem.getProduct().getPrice())
                 .quantity(cartItem.getQuantity())
                 .totalPrice(cartItem.getProduct().getPrice() * cartItem.getQuantity())
+                .stockQuantity(stockQuantity)
                 .build();
     }
 }

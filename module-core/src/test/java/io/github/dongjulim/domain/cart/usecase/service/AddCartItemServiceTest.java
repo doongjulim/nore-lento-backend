@@ -5,9 +5,12 @@ import io.github.dongjulim.domain.cart.entity.Cart;
 import io.github.dongjulim.domain.cart.entity.CartItem;
 import io.github.dongjulim.domain.cart.repository.CartItemRepository;
 import io.github.dongjulim.domain.cart.repository.CartRepository;
+import io.github.dongjulim.domain.common.exception.OutOfStockException;
 import io.github.dongjulim.domain.common.exception.ProductNotFoundException;
 import io.github.dongjulim.domain.product.entity.Product;
 import io.github.dongjulim.domain.product.repository.ProductRepository;
+import io.github.dongjulim.domain.stock.entity.Stock;
+import io.github.dongjulim.domain.stock.repository.StockRepository;
 import io.github.dongjulim.domain.user.component.UserLoader;
 import io.github.dongjulim.domain.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,18 +46,23 @@ class AddCartItemServiceTest {
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private StockRepository stockRepository;
+
     @InjectMocks
     private AddCartItemService addCartItemService;
 
     private User user;
     private Product product;
     private Cart cart;
+    private Stock stock;
 
     @BeforeEach
     void setUp() {
         user = User.builder().id(1L).username("testuser").build();
         product = Product.builder().id(10L).name("사과").price(1000L).categoryId(1L).deleteCheck(false).build();
         cart = Cart.builder().id(100L).userId(1L).build();
+        stock = Stock.builder().id(1L).productId(10L).quantity(10).build();
     }
 
     @Test
@@ -66,6 +74,7 @@ class AddCartItemServiceTest {
 
         given(userLoader.load("testuser")).willReturn(user);
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
         given(cartItemRepository.findByCartIdAndProductId(100L, 10L)).willReturn(Optional.empty());
 
@@ -89,6 +98,7 @@ class AddCartItemServiceTest {
 
         given(userLoader.load("testuser")).willReturn(user);
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
         given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
         given(cartItemRepository.findByCartIdAndProductId(100L, 10L)).willReturn(Optional.of(existingItem));
 
@@ -108,6 +118,7 @@ class AddCartItemServiceTest {
 
         given(userLoader.load("testuser")).willReturn(user);
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
         given(cartRepository.findByUserId(1L)).willReturn(Optional.empty());
         given(cartRepository.save(any(Cart.class))).willReturn(newCart);
         given(cartItemRepository.findByCartIdAndProductId(200L, 10L)).willReturn(Optional.empty());
@@ -117,6 +128,25 @@ class AddCartItemServiceTest {
         ArgumentCaptor<CartItem> captor = ArgumentCaptor.forClass(CartItem.class);
         then(cartItemRepository).should().save(captor.capture());
         assertThat(captor.getValue().getCartId()).isEqualTo(200L);
+    }
+
+    @Test
+    @DisplayName("addCartItem - 재고가 부족하면 OutOfStockException을 던진다")
+    void addCartItem_throwsOutOfStockException_whenStockInsufficient() {
+        AddCartItemRequest request = new AddCartItemRequest();
+        ReflectionTestUtils.setField(request, "productId", 10L);
+        ReflectionTestUtils.setField(request, "quantity", 20);
+
+        Stock insufficientStock = Stock.builder().id(1L).productId(10L).quantity(5).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
+        given(stockRepository.findByProductId(10L)).willReturn(Optional.of(insufficientStock));
+        given(cartRepository.findByUserId(1L)).willReturn(Optional.of(cart));
+        given(cartItemRepository.findByCartIdAndProductId(100L, 10L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> addCartItemService.addCartItem(request, "testuser"))
+                .isInstanceOf(OutOfStockException.class);
     }
 
     @Test
