@@ -2,6 +2,8 @@ package io.github.dongjulim.domain.order.usecase.service;
 
 import io.github.dongjulim.domain.common.exception.OrderNotFoundException;
 import io.github.dongjulim.domain.common.exception.OrderNotCancellableException;
+import io.github.dongjulim.domain.coupon.entity.UserCoupon;
+import io.github.dongjulim.domain.coupon.repository.UserCouponRepository;
 import io.github.dongjulim.domain.order.entity.Order;
 import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.enums.OrderStatus;
@@ -37,6 +39,9 @@ class CancelOrderServiceTest {
 
     @Mock
     private StockRepository stockRepository;
+
+    @Mock
+    private UserCouponRepository userCouponRepository;
 
     @Mock
     private UserLoader userLoader;
@@ -80,6 +85,23 @@ class CancelOrderServiceTest {
         cancelOrderService.cancelOrder(1L, "testuser");
 
         assertThat(stock.getQuantity()).isEqualTo(10); // 7 + 3
+    }
+
+    @Test
+    @DisplayName("cancelOrder - 쿠폰을 사용한 주문 취소 시 쿠폰이 복원된다")
+    void cancelOrder_shouldRestoreCoupon_whenCouponWasUsed() {
+        Order order = Order.builder().id(1L).userId(1L).status(OrderStatus.PENDING).totalPrice(5000L).userCouponId(10L).build();
+        UserCoupon userCoupon = UserCoupon.builder().id(10L).userId(1L).couponId(1L).isUsed(true).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(orderRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(order));
+        given(orderItemRepository.findAllByOrderId(1L)).willReturn(List.of());
+        given(userCouponRepository.findById(10L)).willReturn(Optional.of(userCoupon));
+
+        cancelOrderService.cancelOrder(1L, "testuser");
+
+        assertThat(userCoupon.getIsUsed()).isFalse();
+        assertThat(userCoupon.getUsedAt()).isNull();
     }
 
     @Test

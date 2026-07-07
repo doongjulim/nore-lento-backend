@@ -2,6 +2,8 @@ package io.github.dongjulim.domain.payment.usecase.service;
 
 import io.github.dongjulim.domain.common.exception.PaymentNotFoundException;
 import io.github.dongjulim.domain.common.exception.PaymentNotRefundableException;
+import io.github.dongjulim.domain.coupon.entity.UserCoupon;
+import io.github.dongjulim.domain.coupon.repository.UserCouponRepository;
 import io.github.dongjulim.domain.order.entity.Order;
 import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.enums.OrderStatus;
@@ -47,6 +49,9 @@ class RefundPaymentServiceTest {
 
     @Mock
     private StockRepository stockRepository;
+
+    @Mock
+    private UserCouponRepository userCouponRepository;
 
     @Mock
     private UserLoader userLoader;
@@ -167,6 +172,25 @@ class RefundPaymentServiceTest {
         refundPaymentService.refundPayment(1L, "testuser");
 
         then(refundPointUseCase).should().refundPoint(1L, 1000L);
+    }
+
+    @Test
+    @DisplayName("refundPayment - 쿠폰을 사용한 주문 환불 시 쿠폰이 복원된다")
+    void refundPayment_shouldRestoreCoupon_whenCouponWasUsed() {
+        Payment payment = Payment.builder().id(1L).orderId(10L).userId(1L).method(PaymentMethod.CARD).status(PaymentStatus.COMPLETED).amount(4000L).build();
+        Order order = Order.builder().id(10L).userId(1L).status(OrderStatus.COMPLETED).totalPrice(4000L).userCouponId(5L).build();
+        UserCoupon userCoupon = UserCoupon.builder().id(5L).userId(1L).couponId(1L).isUsed(true).build();
+
+        given(userLoader.load("testuser")).willReturn(user);
+        given(paymentRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(payment));
+        given(orderRepository.findById(10L)).willReturn(Optional.of(order));
+        given(orderItemRepository.findAllByOrderId(10L)).willReturn(List.of());
+        given(userCouponRepository.findById(5L)).willReturn(Optional.of(userCoupon));
+
+        refundPaymentService.refundPayment(1L, "testuser");
+
+        assertThat(userCoupon.getIsUsed()).isFalse();
+        assertThat(userCoupon.getUsedAt()).isNull();
     }
 
     @Test

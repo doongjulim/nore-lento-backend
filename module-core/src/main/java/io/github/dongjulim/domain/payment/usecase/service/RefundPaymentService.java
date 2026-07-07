@@ -2,6 +2,7 @@ package io.github.dongjulim.domain.payment.usecase.service;
 
 import io.github.dongjulim.domain.common.exception.OrderNotFoundException;
 import io.github.dongjulim.domain.common.exception.PaymentNotFoundException;
+import io.github.dongjulim.domain.coupon.repository.UserCouponRepository;
 import io.github.dongjulim.domain.order.entity.Order;
 import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.repository.OrderItemRepository;
@@ -29,6 +30,7 @@ public class RefundPaymentService implements RefundPaymentUseCase {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final StockRepository stockRepository;
+    private final UserCouponRepository userCouponRepository;
     private final UserLoader userLoader;
     private final RevokePointUseCase revokePointUseCase;
     private final RefundPointUseCase refundPointUseCase;
@@ -51,6 +53,11 @@ public class RefundPaymentService implements RefundPaymentUseCase {
         for (OrderItem item : items) {
             stockRepository.findByProductId(item.getProductId())
                     .ifPresent(stock -> stock.increase(item.getQuantity()));
+        }
+
+        if (order.getUserCouponId() != null) {
+            userCouponRepository.findById(order.getUserCouponId())
+                    .ifPresent(uc -> uc.unuse());
         }
 
         long earnedPoints = order.getTotalPrice() / 100;

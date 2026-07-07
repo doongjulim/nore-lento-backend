@@ -1,6 +1,7 @@
 package io.github.dongjulim.domain.order.usecase.service;
 
 import io.github.dongjulim.domain.common.exception.OrderNotFoundException;
+import io.github.dongjulim.domain.coupon.repository.UserCouponRepository;
 import io.github.dongjulim.domain.order.entity.Order;
 import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.repository.OrderItemRepository;
@@ -24,6 +25,7 @@ public class CancelOrderService implements CancelOrderUseCase {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final StockRepository stockRepository;
+    private final UserCouponRepository userCouponRepository;
     private final UserLoader userLoader;
     private final RefundPointUseCase refundPointUseCase;
 
@@ -40,6 +42,11 @@ public class CancelOrderService implements CancelOrderUseCase {
         for (OrderItem item : items) {
             stockRepository.findByProductId(item.getProductId())
                     .ifPresent(stock -> stock.increase(item.getQuantity()));
+        }
+
+        if (order.getUserCouponId() != null) {
+            userCouponRepository.findById(order.getUserCouponId())
+                    .ifPresent(uc -> uc.unuse());
         }
 
         if (order.getUsedPoints() != null && order.getUsedPoints() > 0) {

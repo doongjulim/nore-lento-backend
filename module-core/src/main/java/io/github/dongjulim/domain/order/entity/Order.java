@@ -40,6 +40,9 @@ public class Order extends BaseEntity {
     @Column(name = "used_points")
     private Long usedPoints;
 
+    @Column(name = "user_coupon_id")
+    private Long userCouponId;
+
     @Column(columnDefinition = "default 'false'")
     private Boolean deleteCheck;
 
@@ -54,6 +57,7 @@ public class Order extends BaseEntity {
             OrderStatus status,
             Long totalPrice,
             Long usedPoints,
+            Long userCouponId,
             Boolean deleteCheck,
             LocalDateTime createAt,
             String createBy,
@@ -67,6 +71,7 @@ public class Order extends BaseEntity {
         this.status = status != null ? status : OrderStatus.PENDING;
         this.totalPrice = totalPrice;
         this.usedPoints = usedPoints;
+        this.userCouponId = userCouponId;
         this.deleteCheck = deleteCheck != null ? deleteCheck : false;
     }
 
