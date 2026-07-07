@@ -139,8 +139,6 @@ class SaveOrderServiceTest {
         given(orderCreationHelper.resolveShippingAddressId(1L, 1L)).willReturn(1L);
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
         given(stockRepository.findByProductId(10L)).willReturn(Optional.of(stock));
-        given(orderRepository.save(any(Order.class))).willReturn(
-                Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING).totalPrice(10000L).shippingAddressId(1L).build());
 
         assertThatThrownBy(() -> saveOrderService.saveOrder(request, "testuser"))
                 .isInstanceOf(OutOfStockException.class);
@@ -155,8 +153,6 @@ class SaveOrderServiceTest {
         given(orderCreationHelper.resolveShippingAddressId(1L, 1L)).willReturn(1L);
         given(productRepository.findByIdAndDeleteCheckFalse(10L)).willReturn(Optional.of(product));
         given(stockRepository.findByProductId(10L)).willReturn(Optional.empty());
-        given(orderRepository.save(any(Order.class))).willReturn(
-                Order.builder().id(100L).userId(1L).status(OrderStatus.PENDING).totalPrice(2000L).shippingAddressId(1L).build());
 
         assertThatThrownBy(() -> saveOrderService.saveOrder(request, "testuser"))
                 .isInstanceOf(StockNotFoundException.class);

@@ -1,5 +1,6 @@
 package io.github.dongjulim.domain.order.usecase.service;
 
+import io.github.dongjulim.domain.common.exception.OutOfStockException;
 import io.github.dongjulim.domain.common.exception.ProductNotFoundException;
 import io.github.dongjulim.domain.common.exception.StockNotFoundException;
 import io.github.dongjulim.domain.order.component.OrderCreationHelper;
@@ -51,6 +52,14 @@ public class SaveOrderService implements SaveOrderUseCase {
 
         if (request.getUsePoints() != null && request.getUsePoints() > 0) {
             totalPrice = orderCreationHelper.applyPoints(request.getUsePoints(), user.getId(), totalPrice);
+        }
+
+        for (OrderItemRequest item : request.getOrderItems()) {
+            Stock stock = stockRepository.findByProductId(item.getProductId())
+                    .orElseThrow(StockNotFoundException::new);
+            if (stock.getQuantity() < item.getQuantity()) {
+                throw new OutOfStockException();
+            }
         }
 
         Order order = orderRepository.save(Order.builder()
