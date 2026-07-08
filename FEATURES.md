@@ -23,6 +23,7 @@
 | GET | `/api/v2/user/{id}` | 🔒 | 사용자 상세 조회 |
 | PUT | `/api/v2/user/{id}` | 🔒 | 사용자 정보 수정 |
 | PATCH | `/api/v2/user/{id}/password` | 🔒 | 비밀번호 변경 |
+| POST | `/api/v2/user/password/reset` | 공개 | 비밀번호 초기화 (임시 비밀번호 이메일 발송) |
 | PATCH | `/api/v2/user/{id}/role` | 🛡️ | 권한 변경 (USER·ADMIN·MASTER) |
 | PATCH | `/api/v2/user/{id}/grade` | 🛡️ | 등급 변경 (NORMAL·VIP·...) |
 | DELETE | `/api/v2/user/{id}` | 🔒 | 회원 탈퇴 (soft delete) |
@@ -202,7 +203,7 @@
 | 도메인 | 엔드포인트 수 |
 |---|---|
 | Auth | 1 |
-| User | 8 |
+| User | 9 |
 | Product | 5 |
 | Stock | 2 |
 | Product Category | 4 |
@@ -217,4 +218,4 @@
 | Point | 2 |
 | Coupon | 6 |
 | Wishlist | 3 |
-| **합계** | **73** |
+| **합계** | **74** |
