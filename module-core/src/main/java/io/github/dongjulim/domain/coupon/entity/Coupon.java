@@ -70,7 +70,7 @@ public class Coupon extends BaseEntity {
         if (discountType == DiscountType.FIXED) {
             return Math.max(0, totalPrice - discountValue);
         }
-        return totalPrice * (100 - discountValue) / 100;
+        return Math.max(0, totalPrice * (100 - discountValue) / 100);
     }
 
     public void update(String name, Long discountValue, Long minOrderAmount, LocalDateTime expiresAt) {

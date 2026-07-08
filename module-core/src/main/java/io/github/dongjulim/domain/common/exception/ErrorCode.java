@@ -40,6 +40,7 @@ public enum ErrorCode {
     ORDER_AMOUNT_NOT_ENOUGH("order-amount-not-enough", "Order Amount Not Enough"),
     REVIEW_NOT_ELIGIBLE("review-not-eligible", "Review Not Eligible"),
     INSUFFICIENT_POINT("insufficient-point", "Insufficient Point"),
+    POINT_EXCEEDS_ORDER_AMOUNT("point-exceeds-order-amount", "Point Exceeds Order Amount"),
     INVALID_PASSWORD("invalid-password", "Invalid Password"),
     INVALID_FILE("invalid-file", "Invalid File");
 

@@ -5,6 +5,7 @@ import io.github.dongjulim.domain.common.exception.CouponExpiredException;
 import io.github.dongjulim.domain.common.exception.CouponNotFoundException;
 import io.github.dongjulim.domain.common.exception.InsufficientPointException;
 import io.github.dongjulim.domain.common.exception.OrderAmountNotEnoughException;
+import io.github.dongjulim.domain.common.exception.PointExceedsOrderAmountException;
 import io.github.dongjulim.domain.common.exception.ShippingAddressNotFoundException;
 import io.github.dongjulim.domain.coupon.entity.Coupon;
 import io.github.dongjulim.domain.coupon.entity.UserCoupon;
@@ -191,5 +192,12 @@ class OrderCreationHelperTest {
 
         assertThatThrownBy(() -> orderCreationHelper.applyPoints(3000L, 1L, 6000L))
                 .isInstanceOf(InsufficientPointException.class);
+    }
+
+    @Test
+    @DisplayName("applyPoints - 사용 포인트가 주문 금액을 초과하면 PointExceedsOrderAmountException을 던진다")
+    void applyPoints_throwsPointExceedsOrderAmountException_whenPointsExceedTotal() {
+        assertThatThrownBy(() -> orderCreationHelper.applyPoints(5000L, 1L, 3000L))
+                .isInstanceOf(PointExceedsOrderAmountException.class);
     }
 }
