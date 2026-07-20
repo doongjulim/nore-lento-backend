@@ -77,7 +77,7 @@ erDiagram
 
     MEMBER {
         bigint      id           PK
-        varchar(20) username     UK
+        varchar(100) username    UK
         varchar     password
         varchar     name
         varchar     role              "USER | ADMIN | MASTER"

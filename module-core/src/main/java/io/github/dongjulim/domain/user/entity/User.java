@@ -22,7 +22,7 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
     private Long id;
 
-    @Column(nullable = false, unique = true, columnDefinition = "varchar(20)")
+    @Column(nullable = false, unique = true, columnDefinition = "varchar(100)")
     private String username;
 
     @Column(nullable = false)

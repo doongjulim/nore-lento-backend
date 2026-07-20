@@ -14,7 +14,7 @@ import javax.validation.constraints.Size;
 public class UpdateUserRequest {
 
     @NotBlank
-    @Size(max = 20)
+    @Size(max = 100)
     private String username;
 
     @NotBlank
