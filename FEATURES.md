@@ -36,8 +36,8 @@
 |---|---|---|---|
 | GET | `/api/v2/product` | 🔒 | 상품 목록 조회 (카테고리 필터, 페이징) |
 | GET | `/api/v2/product/{id}` | 🔒 | 상품 상세 조회 |
-| POST | `/api/v2/product` | 🔒 | 상품 등록 |
-| PUT | `/api/v2/product/{id}` | 🔒 | 상품 수정 |
+| POST | `/api/v2/product` | 🔒 | 상품 등록 (multipart/form-data, 이미지 선택 첨부) |
+| PUT | `/api/v2/product/{id}` | 🔒 | 상품 수정 (multipart/form-data, 이미지 선택 첨부) |
 | DELETE | `/api/v2/product/{id}` | 🔒 | 상품 삭제 (soft delete) |
 
 ### Stock (재고)
@@ -88,8 +88,8 @@
 |---|---|---|---|
 | GET | `/api/v2/orders` | 🔒 | 주문 목록 조회 |
 | GET | `/api/v2/orders/{id}` | 🔒 | 주문 상세 조회 |
-| POST | `/api/v2/orders` | 🔒 | 직접 주문 (포인트 사용 가능, 재고 자동 차감) |
-| POST | `/api/v2/orders/from-cart` | 🔒 | 장바구니 주문 (포인트 사용 가능, 재고 자동 차감) |
+| POST | `/api/v2/orders` | 🔒 | 직접 주문 (쿠폰·포인트 사용 가능, 재고 자동 차감) |
+| POST | `/api/v2/orders/from-cart` | 🔒 | 장바구니 주문 (쿠폰·포인트 사용 가능, 재고 자동 차감) |
 | DELETE | `/api/v2/orders/{id}` | 🔒 | 주문 취소 (재고 복원, 포인트 환불) |
 
 ---

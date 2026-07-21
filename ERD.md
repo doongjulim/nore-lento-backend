@@ -102,6 +102,7 @@ erDiagram
         varchar  name
         bigint   price
         text     description
+        varchar  image_url
         boolean  delete_check
         datetime create_at
         datetime update_at
@@ -146,6 +147,7 @@ erDiagram
         bigint   id                  PK
         bigint   user_id             FK
         bigint   shipping_address_id FK
+        bigint   user_coupon_id      FK
         bigint   used_points
         varchar  status                   "PENDING | COMPLETED | CANCELLED"
         bigint   total_price
@@ -302,6 +304,7 @@ erDiagram
 
     MEMBER           ||--o{ USER_COUPON      : "보유 (user_id)"
     COUPON           ||--o{ USER_COUPON      : "발급 (coupon_id)"
+    USER_COUPON      ||--o{ ORDERS           : "주문에 사용 (user_coupon_id)"
 
     MEMBER           ||--o| USER_POINT       : "포인트 1:1 (user_id UK)"
     MEMBER           ||--o{ POINT_HISTORY    : "이력 (user_id)"
@@ -318,12 +321,12 @@ erDiagram
 |---|---|---|
 | `User` | `member` | 회원 정보. `role`(USER·ADMIN·MASTER), `grade`(등급) 보유 |
 | `ProductCategory` | `product_category` | 상품 카테고리 |
-| `Product` | `product` | 상품. 판매자(`user_id`)와 카테고리(`category_id`) 참조 |
+| `Product` | `product` | 상품. 판매자(`user_id`)와 카테고리(`category_id`) 참조. `image_url` 이미지 경로 저장 |
 | `Stock` | `stock` | 상품 재고. `product_id` 유니크 (1:1) |
 | `Cart` | `cart` | 장바구니. 회원 1명당 1개 |
 | `CartItem` | `cart_item` | 장바구니 상품 라인. `quantity` 보유 |
 | `ShippingAddress` | `shipping_address` | 배송지. `is_default`로 기본 배송지 지정 |
-| `Order` | `orders` | 주문. `status`(PENDING→COMPLETED·CANCELLED), `used_points` 사용 포인트 저장 |
+| `Order` | `orders` | 주문. `status`(PENDING→COMPLETED·CANCELLED), `used_points` 사용 포인트, `user_coupon_id` 적용 쿠폰 저장 |
 | `OrderItem` | `order_item` | 주문 상품 라인. 주문 시점의 `price` 스냅샷 저장 |
 | `Payment` | `payment` | 결제. `method`(CARD·BANK_TRANSFER·KAKAO_PAY), `status`(PENDING→COMPLETED→REFUNDED) |
 | `Delivery` | `delivery` | 배송. 주문 1건당 1개(`order_id` unique). `status`(PREPARING→SHIPPING→DELIVERED→RETURNED) |
@@ -369,6 +372,7 @@ MEMBER ──< NOTICE_LIKE           (1:N) 좋아요한 공지
 
 MEMBER ──< USER_COUPON           (1:N) 쿠폰 보유
 COUPON ──< USER_COUPON           (1:N) 쿠폰 발급
+USER_COUPON ──< ORDERS           (1:N) 주문에 사용
 
 MEMBER ──| USER_POINT            (1:1) 포인트 잔액
 MEMBER ──< POINT_HISTORY         (1:N) 포인트 변동 이력
