@@ -42,7 +42,8 @@ public enum ErrorCode {
     INSUFFICIENT_POINT("insufficient-point", "Insufficient Point"),
     POINT_EXCEEDS_ORDER_AMOUNT("point-exceeds-order-amount", "Point Exceeds Order Amount"),
     INVALID_PASSWORD("invalid-password", "Invalid Password"),
-    INVALID_FILE("invalid-file", "Invalid File");
+    INVALID_FILE("invalid-file", "Invalid File"),
+    PAYMENT_GATEWAY_ERROR("payment-gateway-error", "Payment Gateway Error");
 
     private final String code;
     private final String title;

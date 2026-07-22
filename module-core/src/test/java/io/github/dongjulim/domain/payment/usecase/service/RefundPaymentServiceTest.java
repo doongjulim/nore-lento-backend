@@ -12,6 +12,7 @@ import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.payment.entity.Payment;
 import io.github.dongjulim.domain.payment.enums.PaymentMethod;
 import io.github.dongjulim.domain.payment.enums.PaymentStatus;
+import io.github.dongjulim.domain.payment.gateway.PaymentGateway;
 import io.github.dongjulim.domain.payment.repository.PaymentRepository;
 import io.github.dongjulim.domain.point.usecase.RefundPointUseCase;
 import io.github.dongjulim.domain.point.usecase.RevokePointUseCase;
@@ -61,6 +62,9 @@ class RefundPaymentServiceTest {
 
     @Mock
     private RefundPointUseCase refundPointUseCase;
+
+    @Mock
+    private PaymentGateway paymentGateway;
 
     @InjectMocks
     private RefundPaymentService refundPaymentService;

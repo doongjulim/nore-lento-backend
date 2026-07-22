@@ -9,6 +9,7 @@ import io.github.dongjulim.domain.payment.dto.PayOrderRequest;
 import io.github.dongjulim.domain.payment.entity.Payment;
 import io.github.dongjulim.domain.payment.enums.PaymentMethod;
 import io.github.dongjulim.domain.payment.enums.PaymentStatus;
+import io.github.dongjulim.domain.payment.gateway.PaymentGateway;
 import io.github.dongjulim.domain.payment.repository.PaymentRepository;
 import io.github.dongjulim.domain.point.usecase.EarnPointUseCase;
 import io.github.dongjulim.domain.user.component.UserLoader;
@@ -44,6 +45,9 @@ class PayOrderServiceTest {
 
     @Mock
     private EarnPointUseCase earnPointUseCase;
+
+    @Mock
+    private PaymentGateway paymentGateway;
 
     @InjectMocks
     private PayOrderService payOrderService;

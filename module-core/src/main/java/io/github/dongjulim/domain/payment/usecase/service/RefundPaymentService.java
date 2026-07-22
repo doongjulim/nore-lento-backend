@@ -8,6 +8,7 @@ import io.github.dongjulim.domain.order.entity.OrderItem;
 import io.github.dongjulim.domain.order.repository.OrderItemRepository;
 import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.payment.entity.Payment;
+import io.github.dongjulim.domain.payment.gateway.PaymentGateway;
 import io.github.dongjulim.domain.payment.repository.PaymentRepository;
 import io.github.dongjulim.domain.payment.usecase.RefundPaymentUseCase;
 import io.github.dongjulim.domain.point.usecase.RefundPointUseCase;
@@ -34,6 +35,7 @@ public class RefundPaymentService implements RefundPaymentUseCase {
     private final UserLoader userLoader;
     private final RevokePointUseCase revokePointUseCase;
     private final RefundPointUseCase refundPointUseCase;
+    private final PaymentGateway paymentGateway;
 
     @Override
     public void refundPayment(Long paymentId, String username) {
@@ -43,6 +45,8 @@ public class RefundPaymentService implements RefundPaymentUseCase {
                 .orElseThrow(PaymentNotFoundException::new);
 
         payment.refund(); // COMPLETED가 아니면 PaymentNotRefundableException
+
+        paymentGateway.cancel(payment.getTransactionId());
 
         Order order = orderRepository.findById(payment.getOrderId())
                 .orElseThrow(OrderNotFoundException::new);

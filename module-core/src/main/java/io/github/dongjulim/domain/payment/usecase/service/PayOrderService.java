@@ -6,6 +6,7 @@ import io.github.dongjulim.domain.order.repository.OrderRepository;
 import io.github.dongjulim.domain.payment.dto.PayOrderRequest;
 import io.github.dongjulim.domain.payment.entity.Payment;
 import io.github.dongjulim.domain.payment.enums.PaymentStatus;
+import io.github.dongjulim.domain.payment.gateway.PaymentGateway;
 import io.github.dongjulim.domain.payment.repository.PaymentRepository;
 import io.github.dongjulim.domain.payment.usecase.PayOrderUseCase;
 import io.github.dongjulim.domain.point.usecase.EarnPointUseCase;
@@ -24,6 +25,7 @@ public class PayOrderService implements PayOrderUseCase {
     private final OrderRepository orderRepository;
     private final UserLoader userLoader;
     private final EarnPointUseCase earnPointUseCase;
+    private final PaymentGateway paymentGateway;
 
     @Override
     public void payOrder(PayOrderRequest request, String username) {
@@ -34,12 +36,15 @@ public class PayOrderService implements PayOrderUseCase {
 
         order.complete(); // PENDING이 아니면 OrderNotPayableException
 
+        String transactionId = paymentGateway.approve(order.getId(), order.getTotalPrice(), request.getMethod());
+
         paymentRepository.save(Payment.builder()
                 .orderId(order.getId())
                 .userId(user.getId())
                 .method(request.getMethod())
                 .status(PaymentStatus.COMPLETED)
                 .amount(order.getTotalPrice())
+                .transactionId(transactionId)
                 .build());
 
         earnPointUseCase.earnPoint(user.getId(), order.getTotalPrice());

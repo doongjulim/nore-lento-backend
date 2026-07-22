@@ -167,12 +167,13 @@ erDiagram
     }
 
     PAYMENT {
-        bigint   id         PK
-        bigint   order_id   FK
-        bigint   user_id    FK
-        varchar  method          "CARD | BANK_TRANSFER | KAKAO_PAY"
-        varchar  status          "PENDING | COMPLETED | REFUNDED"
+        bigint   id             PK
+        bigint   order_id       FK
+        bigint   user_id        FK
+        varchar  method              "CARD | BANK_TRANSFER | KAKAO_PAY"
+        varchar  status              "PENDING | COMPLETED | REFUNDED"
         bigint   amount
+        varchar  transaction_id      "PG 트랜잭션 ID (Mock: UUID)"
         datetime create_at
         datetime update_at
     }

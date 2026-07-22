@@ -17,6 +17,7 @@ public class FindPaymentResponse {
     private final PaymentMethod method;
     private final PaymentStatus status;
     private final Long amount;
+    private final String transactionId;
     private final LocalDateTime createAt;
 
     public static FindPaymentResponse from(Payment payment) {
@@ -26,6 +27,7 @@ public class FindPaymentResponse {
                 .method(payment.getMethod())
                 .status(payment.getStatus())
                 .amount(payment.getAmount())
+                .transactionId(payment.getTransactionId())
                 .createAt(payment.getCreateAt())
                 .build();
     }

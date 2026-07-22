@@ -39,6 +39,9 @@ public class Payment extends BaseEntity {
     @Column(nullable = false)
     private Long amount;
 
+    @Column(name = "transaction_id")
+    private String transactionId;
+
     @Builder
     public Payment(
             Long id,
@@ -47,6 +50,7 @@ public class Payment extends BaseEntity {
             PaymentMethod method,
             PaymentStatus status,
             Long amount,
+            String transactionId,
             LocalDateTime createAt,
             String createBy,
             LocalDateTime updateAt,
@@ -59,6 +63,7 @@ public class Payment extends BaseEntity {
         this.method = method;
         this.status = status != null ? status : PaymentStatus.PENDING;
         this.amount = amount;
+        this.transactionId = transactionId;
     }
 
     public void refund() {
