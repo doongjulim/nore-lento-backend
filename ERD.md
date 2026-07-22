@@ -329,7 +329,7 @@ erDiagram
 | `ShippingAddress` | `shipping_address` | 배송지. `is_default`로 기본 배송지 지정 |
 | `Order` | `orders` | 주문. `status`(PENDING→COMPLETED·CANCELLED), `used_points` 사용 포인트, `user_coupon_id` 적용 쿠폰 저장 |
 | `OrderItem` | `order_item` | 주문 상품 라인. 주문 시점의 `price` 스냅샷 저장 |
-| `Payment` | `payment` | 결제. `method`(CARD·BANK_TRANSFER·KAKAO_PAY), `status`(PENDING→COMPLETED→REFUNDED) |
+| `Payment` | `payment` | 결제. `method`(CARD·BANK_TRANSFER·KAKAO_PAY), `status`(PENDING→COMPLETED→REFUNDED), `transaction_id` PG 트랜잭션 ID (현재 Mock: UUID) |
 | `Delivery` | `delivery` | 배송. 주문 1건당 1개(`order_id` unique). `status`(PREPARING→SHIPPING→DELIVERED→RETURNED) |
 | `Review` | `review` | 상품 리뷰. `rating`(평점) |
 | `Notification` | `notification` | 사용자 알림. `is_read` 읽음 여부 |
